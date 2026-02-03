@@ -353,7 +353,7 @@
 
   <script>
     // Configuration
-    const API_ENDPOINT = 'https://n8n.homeops.app/webhook/signup-form';
+    const API_ENDPOINT = 'http://178.128.208.39/webhook/signup-form';
     const PLAN_LIMITS = {
       starter: 3,
       family: 6,
@@ -635,17 +635,20 @@
         }
       }
 
-      // Build form data
+      // Build form data (nested structure for workflow)
       const formData = {
-        subscriber_name: document.getElementById('subscriberName').value.trim(),
-        subscriber_whatsapp: normalizePhone(subscriberWhatsapp),
-        subscriber_email: document.getElementById('subscriberEmail').value.trim(),
-        household_name: document.getElementById('householdName').value.trim(),
-        timezone: document.getElementById('timezone').value,
-        language_pref: document.getElementById('language').value,
-        address: document.getElementById('address').value.trim(),
-        selected_plan: selectedPlan,
-        billing_cycle: 'monthly',
+        subscriber: {
+          name: document.getElementById('subscriberName').value.trim(),
+          whatsapp: normalizePhone(subscriberWhatsapp),
+          email: document.getElementById('subscriberEmail').value.trim()
+        },
+        household: {
+          name: document.getElementById('householdName').value.trim(),
+          timezone: document.getElementById('timezone').value,
+          address: document.getElementById('address').value.trim()
+        },
+        plan: selectedPlan,
+        language: document.getElementById('language').value,
         members: validMembers.map(m => ({
           name: m.name.trim(),
           whatsapp: normalizePhone(m.whatsapp),
@@ -676,7 +679,7 @@
           // Whitelisted user - immediately activated
           showSuccess(
             'Welcome to HomeOps!',
-            `<p class="mb-4">Your household <strong>"${formData.household_name}"</strong> is now active.</p>
+            `<p class="mb-4">Your household <strong>"${formData.household.name}"</strong> is now active.</p>
             <p class="mb-4">You can start using HomeOps via WhatsApp immediately!</p>
             <p class="text-sm text-gray-500">Send a message to our WhatsApp number to get started.</p>`
           );
@@ -684,7 +687,7 @@
           // Non-whitelisted user - awaiting manual activation
           showSuccess(
             'Thank You for Signing Up!',
-            `<p class="mb-4">Your signup for <strong>"${formData.household_name}"</strong> is pending activation.</p>
+            `<p class="mb-4">Your signup for <strong>"${formData.household.name}"</strong> is pending activation.</p>
             <div class="bg-gray-50 rounded-lg p-4 mb-4 text-left">
               <p class="font-medium text-gray-900 mb-2">Please complete payment via:</p>
               <ul class="text-sm text-gray-600 space-y-1">
