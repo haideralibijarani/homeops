@@ -1,0 +1,21 @@
+# MCP Configuration (contains sensitive API keys)
+.mcp.json
+
+# Environment variables
+.env
+.env.local
+
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
