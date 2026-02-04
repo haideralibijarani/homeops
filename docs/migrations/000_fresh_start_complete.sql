@@ -46,7 +46,14 @@ CREATE TABLE IF NOT EXISTS households (
   max_members INTEGER DEFAULT 3,
   stripe_subscription_id TEXT,
   onboarded_at TIMESTAMPTZ,
-  onboarding_source TEXT DEFAULT 'whatsapp'
+  onboarding_source TEXT DEFAULT 'whatsapp',
+
+  -- Granular language preferences (from migration 009)
+  tts_language_staff TEXT DEFAULT 'ur',      -- Voice notes for staff: en/ur
+  tts_language_members TEXT DEFAULT 'en',    -- Voice notes for members: en/ur
+  text_language_staff TEXT DEFAULT 'ur',     -- Text messages for staff: en/ur (Roman Urdu)
+  text_language_members TEXT DEFAULT 'en',   -- Text messages for members: en/ur
+  digest_language TEXT DEFAULT 'en'          -- Daily digest: en/ur
 );
 
 -- Members table (family members)
@@ -178,6 +185,10 @@ CREATE TABLE IF NOT EXISTS pending_signups (
 
   -- Members JSON: [{"name": "...", "whatsapp": "...", "role": "member|staff", "language_pref": "en|ur"}]
   members_json JSONB DEFAULT '[]'::JSONB,
+
+  -- Granular language settings JSON (from migration 010)
+  -- {"tts_language_staff": "ur", "tts_language_members": "en", "text_language_staff": "ur", "text_language_members": "en", "digest_language": "en"}
+  language_settings_json JSONB DEFAULT NULL,
 
   -- Plan selection
   selected_plan TEXT NOT NULL CHECK (selected_plan IN ('starter', 'family', 'premium')),
