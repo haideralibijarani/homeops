@@ -139,12 +139,13 @@
           </div>
 
           <div>
-            <label for="language" class="block text-sm font-medium text-gray-700 mb-1">Preferred Language</label>
+            <label for="language" class="block text-sm font-medium text-gray-700 mb-1">Preferred Language / ترجیحی زبان</label>
             <select id="language" name="language_pref"
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white">
               <option value="en" selected>English</option>
-              <option value="ur">Urdu</option>
+              <option value="ur">اردو / Urdu</option>
             </select>
+            <p class="text-xs text-gray-500 mt-1">Messages will be sent in this language</p>
           </div>
 
           <div class="sm:col-span-2">
@@ -437,7 +438,7 @@
       }
 
       const memberId = Date.now();
-      members.push({ id: memberId, name: '', whatsapp: '', role: 'member', language_pref: 'en' });
+      members.push({ id: memberId, name: '', whatsapp: '', role: 'member', language_pref: '' });
 
       const memberHtml = `
         <div class="member-item border border-gray-200 rounded-lg p-4" data-member-id="${memberId}">
@@ -473,11 +474,12 @@
               <input type="tel" class="member-whatsapp w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
                 placeholder="WhatsApp (+92...)" data-member-id="${memberId}">
             </div>
-            <div class="member-language-container hidden" data-member-id="${memberId}">
+            <div class="member-language-container" data-member-id="${memberId}">
               <select class="member-language w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white"
-                data-member-id="${memberId}">
+                data-member-id="${memberId}" title="Language preference (optional)">
+                <option value="">Use household default</option>
                 <option value="en">English</option>
-                <option value="ur">Urdu</option>
+                <option value="ur">اردو / Urdu</option>
               </select>
             </div>
           </div>
@@ -510,13 +512,6 @@
           const member = members.find(m => m.id === memberId);
           if (member) {
             member.role = e.target.value;
-            // Show/hide language dropdown based on role
-            const langContainer = memberEl.querySelector('.member-language-container');
-            if (e.target.value === 'staff') {
-              langContainer.classList.remove('hidden');
-            } else {
-              langContainer.classList.add('hidden');
-            }
           }
         });
       });
@@ -653,7 +648,7 @@
           name: m.name.trim(),
           whatsapp: normalizePhone(m.whatsapp),
           role: m.role,
-          language_pref: m.role === 'staff' ? m.language_pref : undefined
+          language_pref: m.language_pref || null  // null = inherit from household
         }))
       };
 

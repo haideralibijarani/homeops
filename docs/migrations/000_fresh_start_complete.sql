@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS members (
   name TEXT NOT NULL,
   whatsapp TEXT NOT NULL,
   role TEXT DEFAULT 'member' CHECK (role IN ('admin', 'member')),
+  language_pref TEXT DEFAULT NULL,  -- NULL = inherit from household (from migration 008)
   opt_in_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
