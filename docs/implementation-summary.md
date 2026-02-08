@@ -17,25 +17,11 @@
    - Added: `received_at` timestamp field
    - Fixed: `is_audio` now returns boolean (was string)
 
-2. **Added Message Logging**
-   - New Node: "Log Message" (Supabase)
-   - Table: `messages`
-   - Fields Logged:
-     - direction: 'inbound'
-     - from_number: `{{$json.from}}`
-     - to_number: `{{$json.to}}`
-     - msg_type: `{{$json.has_media ? ($json.is_audio ? 'audio' : 'media') : 'text'}}`
-     - media_url: `{{$json.mediaUrl || null}}`
-     - payload_json: Full Twilio webhook payload
-   - continueOnFail: true (won't block workflow if logging fails)
-
 **Current Flow:**
 ```
 Webhook
   ↓
 Normalise Input
-  ↓
-Log Message  [NEW]
   ↓
 Respond to Webhook
   ↓
@@ -48,15 +34,6 @@ Execute WF2-PROCESSOR
 
 **New Nodes Added:**
 
-1. **Check If Already Processed** (Supabase)
-   - Position: Right after trigger
-   - Operation: Query `messages` table
-   - Filter: `from_number` + `message_sid`
-   - Purpose: Prevent duplicate processing
-
-2. **IF (Already Processed?)**
-   - Logic: If message count > 0, skip processing
-   - Purpose: Idempotency check
 
 3. **IF (Member Found?)**
    - Position: After "Member Lookup"
@@ -312,7 +289,7 @@ Once implementation is complete:
 - [ ] "What tasks are pending?" → List returned
 
 ### Edge Cases
-- [ ] Duplicate message (same MessageSid) → Idempotency check works
+
 - [ ] Audio transcription fails → Fallback message
 - [ ] OpenAI API timeout → Error handled gracefully
 - [ ] Unknown assignee name → Clarification requested
@@ -340,8 +317,6 @@ Once implementation is complete:
 ## 🔐 Security & Compliance
 
 **Implemented:**
-- ✅ Message audit logging (all inbound messages logged)
-- ✅ Idempotency checks (prevent duplicate processing)
 - ✅ Household isolation (users only see their data)
 - ✅ Failed node continuation (won't crash on errors)
 
@@ -349,7 +324,7 @@ Once implementation is complete:
 - Add rate limiting per phone number
 - Implement webhook signature verification (Twilio)
 - Encrypt sensitive data in payload_json
-- Add data retention policy (auto-delete old messages)
+
 
 ---
 
@@ -365,7 +340,7 @@ Once implementation is complete:
    - SUPABASE_KEY
 
 2. **Supabase Tables:**
-   - Verify all tables exist (households, members, staff, tasks, pending_actions, messages)
+   - Verify all tables exist (households, members, staff, tasks, pending_actions)
    - Check indexes on frequently queried fields
    - Set up Row Level Security (RLS) policies
 

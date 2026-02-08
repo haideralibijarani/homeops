@@ -63,7 +63,7 @@ Your role: Design, reason about, and generate production-ready workflows, integr
 - **staff** - household staff with WhatsApp numbers
 - **pending_actions** - multi-turn conversation state for clarification
 - **tasks** - structured task records with assignment and lifecycle
-- **messages** - audit log of all WhatsApp interactions
+
 
 ---
 

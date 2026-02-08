@@ -69,12 +69,7 @@ IF (is Audio?)
 
 ### ⚠️ Missing/Incomplete Components
 
-#### 1. **Message Audit Logging**
-- **Gap:** No logging to `messages` table
-- **Impact:** No audit trail of inbound/outbound messages
-- **Required Fields:** household_id, direction, from_number, to_number, msg_type, media_url, transcript, payload_json
-
-#### 2. **Staff Lookup**
+#### 1. **Staff Lookup**
 - **Gap:** Only `Member Lookup` exists, no `Staff` table integration
 - **Impact:** Cannot assign tasks to household staff
 - **Required:** Add staff lookup and assignee resolution logic
@@ -110,12 +105,7 @@ IF (is Audio?)
 
 ### Priority 1: Critical Gaps
 
-1. **Add Message Logging**
-   - Location: After WF1 normalization
-   - Action: Insert to `messages` table with all fields
-   - Node: Supabase Insert
-
-2. **Fix WhatsApp Prefix Removal**
+1. **Fix WhatsApp Prefix Removal**
    - Location: WF1 "Normalise Input" node
    - Current: `{{$json.body.From}}`
    - Fixed: `{{$json.body.From.replace('whatsapp:', '')}}`
@@ -153,12 +143,7 @@ IF (is Audio?)
    - Location: Around all external API calls
    - Nodes: Error Workflow trigger, logging, fallback responses
 
-8. **Add Idempotency Check**
-   - Location: Start of WF2
-   - Logic: Check if MessageSid already processed
-   - Node: Supabase lookup on messages table
-
-9. **Add Retry Logic**
+8. **Add Retry Logic**
    - Location: OpenAI nodes
    - Logic: Retry on rate limit / timeout
    - Node: Loop with delay
@@ -177,19 +162,12 @@ IF (is Audio?)
 #### ❌ Missing Integration
 - `households` - Referenced but no explicit lookup
 - `staff` - Not integrated
-- `messages` - Not being written
-
 #### Recommended Schema Checks
 ```sql
 -- Verify tables exist
 SELECT table_name FROM information_schema.tables
 WHERE table_schema = 'public'
-AND table_name IN ('households', 'members', 'staff', 'tasks', 'pending_actions', 'messages');
-
--- Check messages table structure
-SELECT column_name, data_type
-FROM information_schema.columns
-WHERE table_name = 'messages';
+AND table_name IN ('households', 'members', 'staff', 'tasks', 'pending_actions');
 ```
 
 ---
@@ -199,8 +177,7 @@ WHERE table_name = 'messages';
 ### Immediate Actions (Do First)
 
 1. **Fix WhatsApp prefix removal** in WF1
-2. **Add message logging** after normalization
-3. **Validate Supabase schema** matches docs/schema.sql
+2. **Validate Supabase schema** matches docs/schema.sql
 
 ### Short-term (This Week)
 
@@ -212,8 +189,7 @@ WHERE table_name = 'messages';
 ### Medium-term (Next Sprint)
 
 8. **Add comprehensive error handling**
-9. **Implement idempotency checks**
-10. **Add monitoring/alerting**
+9. **Add monitoring/alerting**
 
 ---
 

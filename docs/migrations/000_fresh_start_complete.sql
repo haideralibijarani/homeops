@@ -111,21 +111,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   max_reminders INTEGER DEFAULT 3
 );
 
--- Messages table (audit log)
-CREATE TABLE IF NOT EXISTS messages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  household_id UUID REFERENCES households(id) ON DELETE SET NULL,
-  direction TEXT NOT NULL CHECK (direction IN ('inbound', 'outbound')),
-  from_number TEXT NOT NULL,
-  to_number TEXT NOT NULL,
-  msg_type TEXT DEFAULT 'text' CHECK (msg_type IN ('text', 'audio', 'media')),
-  category TEXT,
-  media_url TEXT,
-  transcript TEXT,
-  payload_json JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
 -- Pending actions table (multi-turn conversation state)
 CREATE TABLE IF NOT EXISTS pending_actions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -244,7 +229,6 @@ CREATE INDEX IF NOT EXISTS idx_tasks_household_id ON tasks(household_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_tasks_assignee_member_id ON tasks(assignee_member_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_assignee_staff_id ON tasks(assignee_staff_id);
-CREATE INDEX IF NOT EXISTS idx_messages_household_id ON messages(household_id);
 CREATE INDEX IF NOT EXISTS idx_pending_actions_from_number ON pending_actions(from_number);
 
 -- Payment/subscription indexes
@@ -446,7 +430,7 @@ COMMENT ON TABLE households IS 'Core household entity with subscription and paym
 COMMENT ON TABLE members IS 'Family members belonging to a household';
 COMMENT ON TABLE staff IS 'Household staff/workers with language preferences';
 COMMENT ON TABLE tasks IS 'Tasks assigned to members or staff with acknowledgment and reminder tracking';
-COMMENT ON TABLE messages IS 'Audit log of all WhatsApp interactions';
+
 COMMENT ON TABLE pending_actions IS 'Multi-turn conversation state for clarification flows';
 COMMENT ON TABLE payments IS 'Payment history for household subscriptions';
 COMMENT ON TABLE pending_signups IS 'Temporary storage for signups awaiting payment';

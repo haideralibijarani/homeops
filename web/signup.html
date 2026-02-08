@@ -529,7 +529,7 @@
       }
 
       const memberId = Date.now();
-      members.push({ id: memberId, name: '', whatsapp: '', role: 'member', language_pref: '' });
+      members.push({ id: memberId, name: '', whatsapp: '', role: 'member', language_pref: '', title: '' });
 
       const memberHtml = `
         <div class="member-item border border-gray-200 rounded-lg p-4" data-member-id="${memberId}">
@@ -556,7 +556,7 @@
               </svg>
             </button>
           </div>
-          <div class="grid gap-3 sm:grid-cols-3">
+          <div class="grid gap-3 sm:grid-cols-2 sm:grid-cols-4">
             <div>
               <input type="text" class="member-name w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
                 placeholder="Name" data-member-id="${memberId}">
@@ -564,6 +564,19 @@
             <div>
               <input type="tel" class="member-whatsapp w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
                 placeholder="WhatsApp (+92...)" data-member-id="${memberId}">
+            </div>
+            <div class="member-title-container hidden" data-member-id="${memberId}">
+              <select class="member-title w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white"
+                data-member-id="${memberId}">
+                <option value="">Job Title</option>
+                <option value="driver">Driver</option>
+                <option value="maid">Maid</option>
+                <option value="cook">Cook</option>
+                <option value="guard">Guard</option>
+                <option value="gardener">Gardener</option>
+                <option value="nanny">Nanny</option>
+                <option value="other">Other</option>
+              </select>
             </div>
             <div class="member-language-container" data-member-id="${memberId}">
               <select class="member-language w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white"
@@ -596,13 +609,29 @@
         if (member) member.language_pref = e.target.value;
       });
 
-      // Role toggle event listeners
+      // Title dropdown event listener
+      memberEl.querySelector('.member-title').addEventListener('change', (e) => {
+        const member = members.find(m => m.id === memberId);
+        if (member) member.title = e.target.value;
+      });
+
+      // Role toggle event listeners (show/hide title dropdown)
       const roleInputs = memberEl.querySelectorAll('.member-role');
       roleInputs.forEach(input => {
         input.addEventListener('change', (e) => {
           const member = members.find(m => m.id === memberId);
           if (member) {
             member.role = e.target.value;
+            member.title = '';
+          }
+          const titleContainer = memberEl.querySelector('.member-title-container');
+          const titleSelect = memberEl.querySelector('.member-title');
+          if (e.target.value === 'staff') {
+            titleContainer.classList.remove('hidden');
+            titleSelect.selectedIndex = 0;
+          } else {
+            titleContainer.classList.add('hidden');
+            titleSelect.selectedIndex = 0;
           }
         });
       });
@@ -746,7 +775,8 @@
           name: m.name.trim(),
           whatsapp: normalizePhone(m.whatsapp),
           role: m.role,
-          language_pref: m.language_pref || null  // null = inherit from household
+          language_pref: m.language_pref || null,  // null = inherit from household
+          title: m.role === 'staff' ? (m.title || null) : null  // job title for staff
         }))
       };
 
