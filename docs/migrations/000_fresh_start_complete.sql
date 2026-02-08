@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS households (
   timezone TEXT DEFAULT 'Asia/Karachi',
   status TEXT DEFAULT 'active' CHECK (status IN ('active', 'suspended', 'cancelled')),
   address TEXT,
-  language_pref TEXT DEFAULT 'en',
   created_at TIMESTAMPTZ DEFAULT NOW(),
 
   -- Subscriber details (from migration 002)
@@ -27,7 +26,6 @@ CREATE TABLE IF NOT EXISTS households (
 
   -- Subscription management (from migration 002)
   subscription_status TEXT DEFAULT 'trial' CHECK (subscription_status IN ('trial', 'active', 'past_due', 'cancelled', 'expired')),
-  subscription_plan TEXT CHECK (subscription_plan IN ('monthly', 'annual', NULL)),
   subscription_expires_at TIMESTAMPTZ,
 
   -- Payment tracking (from migration 002)
@@ -48,12 +46,8 @@ CREATE TABLE IF NOT EXISTS households (
   onboarded_at TIMESTAMPTZ,
   onboarding_source TEXT DEFAULT 'whatsapp',
 
-  -- Granular language preferences (from migration 009)
-  tts_language_staff TEXT DEFAULT 'ur',      -- Voice notes for staff: en/ur
-  tts_language_members TEXT DEFAULT 'en',    -- Voice notes for members: en/ur
-  text_language_staff TEXT DEFAULT 'ur',     -- Text messages for staff: en/ur (Roman Urdu)
-  text_language_members TEXT DEFAULT 'en',   -- Text messages for members: en/ur
-  digest_language TEXT DEFAULT 'en'          -- Daily digest: en/ur
+  -- Voice note language for staff (from migration 009, simplified in 012)
+  tts_language_staff TEXT DEFAULT 'ur'       -- Voice notes for staff: en/ur
 );
 
 -- Members table (family members)
@@ -87,13 +81,11 @@ CREATE TABLE IF NOT EXISTS tasks (
   title TEXT NOT NULL,
   notes TEXT,
   assignee_type TEXT CHECK (assignee_type IN ('member', 'staff')),
-  assignee_id UUID,
   assignee_member_id UUID REFERENCES members(id) ON DELETE SET NULL,
   assignee_staff_id UUID REFERENCES staff(id) ON DELETE SET NULL,
   due_at TIMESTAMPTZ,
   priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'acknowledged', 'in_progress', 'completed', 'problem', 'cancelled')),
-  reminded_at TIMESTAMPTZ,
   completed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
 
@@ -165,10 +157,8 @@ CREATE TABLE IF NOT EXISTS pending_signups (
   -- Household info
   household_name TEXT NOT NULL,
   timezone TEXT DEFAULT 'Asia/Karachi',
-  address TEXT,
-  language_pref TEXT DEFAULT 'en',
 
-  -- Members JSON: [{"name": "...", "whatsapp": "...", "role": "member|staff", "language_pref": "en|ur"}]
+  -- Members JSON: [{"name": "...", "whatsapp": "...", "role": "member|staff"}]
   members_json JSONB DEFAULT '[]'::JSONB,
 
   -- Granular language settings JSON (from migration 010)
