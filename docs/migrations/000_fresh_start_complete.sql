@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS households (
 
   -- Subscription management (from migration 002)
   subscription_status TEXT DEFAULT 'trial' CHECK (subscription_status IN ('trial', 'active', 'past_due', 'cancelled', 'expired')),
+  subscription_plan TEXT CHECK (subscription_plan IN ('monthly', 'annual', NULL)),
   subscription_expires_at TIMESTAMPTZ,
 
   -- Payment tracking (from migration 002)

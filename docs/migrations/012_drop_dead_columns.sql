@@ -4,8 +4,7 @@
 -- households: language_pref replaced by granular tts_language_staff etc.
 ALTER TABLE households DROP COLUMN IF EXISTS language_pref;
 
--- households: subscription_plan is unused; plan_tier is the active column
-ALTER TABLE households DROP COLUMN IF EXISTS subscription_plan;
+-- NOTE: subscription_plan kept — subscription_dashboard view depends on it
 
 -- households: members never receive voice notes (only staff do)
 ALTER TABLE households DROP COLUMN IF EXISTS tts_language_members;
