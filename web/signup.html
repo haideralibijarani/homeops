@@ -138,95 +138,17 @@
             </select>
           </div>
 
-          <!-- Language Preferences Section -->
+          <!-- Staff Voice Note Language -->
           <div class="sm:col-span-2">
-            <button type="button" id="toggleLanguageSettings"
-              class="flex items-center justify-between w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition">
-              <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
-                </svg>
-                <span class="font-medium text-gray-700">Language Preferences / زبان کی ترتیبات</span>
-              </div>
-              <svg id="languageChevron" class="w-5 h-5 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-
-            <div id="languageSettingsPanel" class="hidden mt-3 p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-4">
-              <p class="text-sm text-gray-600 mb-4">Configure how HomeOps communicates with your household. Staff typically prefer Urdu, members typically prefer English.</p>
-
-              <!-- TTS Voice Notes -->
-              <div class="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label for="ttsLanguageStaff" class="block text-sm font-medium text-gray-700 mb-1">
-                    🎙️ Voice Notes for Staff
-                  </label>
-                  <select id="ttsLanguageStaff" name="tts_language_staff"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white text-sm">
-                    <option value="ur" selected>اردو / Urdu (Recommended)</option>
-                    <option value="en">English</option>
-                  </select>
-                  <p class="text-xs text-gray-500 mt-1">Audio messages sent to staff</p>
-                </div>
-
-                <div>
-                  <label for="ttsLanguageMembers" class="block text-sm font-medium text-gray-700 mb-1">
-                    🎙️ Voice Notes for Members
-                  </label>
-                  <select id="ttsLanguageMembers" name="tts_language_members"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white text-sm">
-                    <option value="en" selected>English (Recommended)</option>
-                    <option value="ur">اردو / Urdu</option>
-                  </select>
-                  <p class="text-xs text-gray-500 mt-1">Audio messages sent to family</p>
-                </div>
-              </div>
-
-              <!-- Text Messages -->
-              <div class="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label for="textLanguageStaff" class="block text-sm font-medium text-gray-700 mb-1">
-                    💬 Text Messages for Staff
-                  </label>
-                  <select id="textLanguageStaff" name="text_language_staff"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white text-sm">
-                    <option value="ur" selected>Roman Urdu (Recommended)</option>
-                    <option value="en">English</option>
-                  </select>
-                  <p class="text-xs text-gray-500 mt-1">Written messages sent to staff</p>
-                </div>
-
-                <div>
-                  <label for="textLanguageMembers" class="block text-sm font-medium text-gray-700 mb-1">
-                    💬 Text Messages for Members
-                  </label>
-                  <select id="textLanguageMembers" name="text_language_members"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white text-sm">
-                    <option value="en" selected>English (Recommended)</option>
-                    <option value="ur">Roman Urdu</option>
-                  </select>
-                  <p class="text-xs text-gray-500 mt-1">Written messages sent to family</p>
-                </div>
-              </div>
-
-              <!-- Daily Digest -->
-              <div class="sm:col-span-2">
-                <label for="digestLanguage" class="block text-sm font-medium text-gray-700 mb-1">
-                  📋 Daily Digest Summary
-                </label>
-                <select id="digestLanguage" name="digest_language"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white text-sm">
-                  <option value="en" selected>English (Recommended)</option>
-                  <option value="ur">Roman Urdu</option>
-                </select>
-                <p class="text-xs text-gray-500 mt-1">Daily task summary sent to all members</p>
-              </div>
-
-              <p class="text-xs text-gray-500 pt-2 border-t border-gray-200">
-                💡 Tip: These settings can be changed later via WhatsApp by the admin.
-              </p>
-            </div>
+            <label for="ttsLanguageStaff" class="block text-sm font-medium text-gray-700 mb-1">
+              Staff Voice Note Language
+            </label>
+            <select id="ttsLanguageStaff" name="tts_language_staff"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white text-sm">
+              <option value="ur" selected>Urdu (Recommended)</option>
+              <option value="en">English</option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">Language for voice notes sent to staff. Text messages are always in English.</p>
           </div>
 
           <div class="sm:col-span-2">
@@ -487,16 +409,6 @@
       // Form submission
       form.addEventListener('submit', handleSubmit);
 
-      // Language settings toggle
-      const toggleBtn = document.getElementById('toggleLanguageSettings');
-      const panel = document.getElementById('languageSettingsPanel');
-      const chevron = document.getElementById('languageChevron');
-
-      toggleBtn.addEventListener('click', () => {
-        panel.classList.toggle('hidden');
-        chevron.classList.toggle('rotate-180');
-      });
-
       // Initial UI update
       updatePlanUI();
     }
@@ -529,7 +441,7 @@
       }
 
       const memberId = Date.now();
-      members.push({ id: memberId, name: '', whatsapp: '', role: 'member', language_pref: '', title: '' });
+      members.push({ id: memberId, name: '', whatsapp: '', role: 'member', title: '' });
 
       const memberHtml = `
         <div class="member-item border border-gray-200 rounded-lg p-4" data-member-id="${memberId}">
@@ -578,14 +490,6 @@
                 <option value="other">Other</option>
               </select>
             </div>
-            <div class="member-language-container" data-member-id="${memberId}">
-              <select class="member-language w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white"
-                data-member-id="${memberId}" title="Language preference (optional)">
-                <option value="">Use household default</option>
-                <option value="en">English</option>
-                <option value="ur">اردو / Urdu</option>
-              </select>
-            </div>
           </div>
         </div>
       `;
@@ -604,11 +508,6 @@
         const member = members.find(m => m.id === memberId);
         if (member) member.whatsapp = e.target.value;
       });
-      memberEl.querySelector('.member-language').addEventListener('change', (e) => {
-        const member = members.find(m => m.id === memberId);
-        if (member) member.language_pref = e.target.value;
-      });
-
       // Title dropdown event listener
       memberEl.querySelector('.member-title').addEventListener('change', (e) => {
         const member = members.find(m => m.id === memberId);
@@ -763,20 +662,12 @@
           address: document.getElementById('address').value.trim()
         },
         plan: selectedPlan,
-        // Granular language preferences
-        language_settings: {
-          tts_language_staff: document.getElementById('ttsLanguageStaff').value,
-          tts_language_members: document.getElementById('ttsLanguageMembers').value,
-          text_language_staff: document.getElementById('textLanguageStaff').value,
-          text_language_members: document.getElementById('textLanguageMembers').value,
-          digest_language: document.getElementById('digestLanguage').value
-        },
+        tts_language_staff: document.getElementById('ttsLanguageStaff').value,
         members: validMembers.map(m => ({
           name: m.name.trim(),
           whatsapp: normalizePhone(m.whatsapp),
           role: m.role,
-          language_pref: m.language_pref || null,  // null = inherit from household
-          title: m.role === 'staff' ? (m.title || null) : null  // job title for staff
+          title: m.role === 'staff' ? (m.title || null) : null
         }))
       };
 
