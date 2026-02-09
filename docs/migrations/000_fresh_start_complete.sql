@@ -70,7 +70,8 @@ CREATE TABLE IF NOT EXISTS staff (
   name TEXT NOT NULL,
   role TEXT DEFAULT 'staff',
   whatsapp TEXT NOT NULL,
-  language_pref TEXT DEFAULT 'en',
+  language_pref TEXT DEFAULT 'en',        -- Per-staff TTS language (en/ur)
+  voice_notes_enabled BOOLEAN DEFAULT false,  -- Premium opt-in: PKR 5,000/staff/month (migration 013)
   opt_in_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
