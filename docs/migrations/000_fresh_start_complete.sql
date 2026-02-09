@@ -1,6 +1,6 @@
 -- HomeOps Complete Database Schema - Fresh Start
 -- Run this in Supabase SQL Editor for a clean database setup
--- Combines all migrations (001-019) into a single script
+-- Combines all migrations (001-020) into a single script
 --
 -- Last Updated: 2026-02-09
 -- Pricing: Essential PKR 25K (5 ppl, 30 tasks/day) | Pro PKR 50K (8 ppl, 50 tasks/day) | Max PKR 100K (15 ppl, 100 tasks/day)
@@ -50,7 +50,11 @@ CREATE TABLE IF NOT EXISTS households (
   tts_language_staff TEXT DEFAULT 'ur',       -- Voice notes for staff: en/ur
 
   -- Expected monthly payment (from migration 018)
-  expected_monthly_amount DECIMAL(10,2)      -- Base + extra people + voice add-ons
+  expected_monthly_amount DECIMAL(10,2),     -- Base + extra people + voice add-ons
+
+  -- Location (from migration 020)
+  city TEXT,                                 -- City where the household is located
+  country TEXT DEFAULT 'Pakistan'            -- Country where the household is located
 );
 
 -- Members table (family members)
@@ -561,7 +565,8 @@ BEGIN
   ),
   household_data AS (
     SELECT
-      h.id, h.name, h.plan_tier, h.subscription_status, h.expected_monthly_amount, h.subscribed_at, h.created_at,
+      h.id, h.name, h.plan_tier, h.subscription_status, h.expected_monthly_amount,
+      h.subscribed_at, h.created_at, h.city, h.country,
       (SELECT COUNT(*) FROM members m WHERE m.household_id = h.id) as member_count,
       (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id) as staff_count,
       (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id AND s.voice_notes_enabled = true) as voice_staff_count,
@@ -585,7 +590,7 @@ BEGIN
       COALESCE(SUM(ud.ai_calls), 0) * (SELECT ai_call FROM cost_rates) as breakdown_ai
     FROM households h
     LEFT JOIN usage_daily ud ON ud.household_id = h.id
-    GROUP BY h.id, h.name, h.plan_tier, h.subscription_status, h.expected_monthly_amount, h.subscribed_at, h.created_at
+    GROUP BY h.id, h.name, h.plan_tier, h.subscription_status, h.expected_monthly_amount, h.subscribed_at, h.created_at, h.city, h.country
   )
   SELECT json_build_object(
     'success', true,
@@ -603,6 +608,7 @@ BEGIN
         SELECT json_build_object(
           'id', hd.id, 'name', hd.name, 'plan_tier', hd.plan_tier,
           'subscription_status', hd.subscription_status,
+          'city', hd.city, 'country', hd.country,
           'member_count', hd.member_count, 'staff_count', hd.staff_count,
           'voice_staff_count', hd.voice_staff_count,
           'subscribed_at', hd.subscribed_at, 'created_at', hd.created_at,

@@ -190,6 +190,9 @@
                 <th class="sort-header px-5 py-3 text-left font-semibold" data-sort="name" onclick="sortTable('name')">
                   Household <span class="sort-icon">&#9650;</span>
                 </th>
+                <th class="sort-header px-4 py-3 text-left font-semibold" data-sort="location" onclick="sortTable('location')">
+                  Location <span class="sort-icon">&#9650;</span>
+                </th>
                 <th class="sort-header px-4 py-3 text-left font-semibold" data-sort="plan" onclick="sortTable('plan')">
                   Plan <span class="sort-icon">&#9650;</span>
                 </th>
@@ -211,7 +214,7 @@
               </tr>
             </thead>
             <tbody id="householdTableBody">
-              <tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">Loading...</td></tr>
+              <tr><td colspan="8" class="px-5 py-12 text-center text-gray-400">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -421,7 +424,7 @@
       const tbody = document.getElementById('householdTableBody');
 
       if (sorted.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">No household data yet. Run migration 019 and trigger WF8.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="px-5 py-12 text-center text-gray-400">No household data yet. Run migration 019 and trigger WF8.</td></tr>';
         return;
       }
 
@@ -456,6 +459,7 @@
             <td class="px-5 py-3.5 font-medium text-gray-900">
               ${statusDot}${h.name || 'Unknown'}
             </td>
+            <td class="px-4 py-3.5 text-gray-500 text-xs">${h.city || ''}${h.city && h.country ? ', ' : ''}${h.country || ''}</td>
             <td class="px-4 py-3.5 text-gray-600">${planLabel}</td>
             <td class="px-4 py-3.5 text-center text-gray-600 font-mono text-xs">
               ${h.member_count || 0}m + ${h.staff_count || 0}s
@@ -469,7 +473,7 @@
             </td>
           </tr>
           <tr class="expand-row" id="expand-${i}">
-            <td colspan="7" class="px-5 py-4 bg-gray-50 border-b border-gray-100">
+            <td colspan="8" class="px-5 py-4 bg-gray-50 border-b border-gray-100">
               <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-xs">
                 <div>
                   <p class="font-semibold text-gray-500 uppercase tracking-wider mb-2">Cost Breakdown (All-Time)</p>
@@ -511,6 +515,7 @@
                   <p class="font-semibold text-gray-500 uppercase tracking-wider mt-3 mb-2">Info</p>
                   <div class="space-y-1 text-gray-600">
                     <div>Status: <span class="font-medium">${h.subscription_status || 'n/a'}</span></div>
+                    <div>Location: <span class="font-medium">${h.city || 'n/a'}${h.country ? ', ' + h.country : ''}</span></div>
                     <div>Since: <span class="font-medium font-mono">${h.subscribed_at ? new Date(h.subscribed_at).toLocaleDateString() : h.created_at ? new Date(h.created_at).toLocaleDateString() : 'n/a'}</span></div>
                   </div>
                 </div>
@@ -552,6 +557,8 @@
         let av, bv;
         switch (key) {
           case 'name': av = (a.name || '').toLowerCase(); bv = (b.name || '').toLowerCase();
+            return av < bv ? -1 * mult : av > bv ? 1 * mult : 0;
+          case 'location': av = ((a.city || '') + (a.country || '')).toLowerCase(); bv = ((b.city || '') + (b.country || '')).toLowerCase();
             return av < bv ? -1 * mult : av > bv ? 1 * mult : 0;
           case 'plan': av = a.plan_tier || ''; bv = b.plan_tier || '';
             return av < bv ? -1 * mult : av > bv ? 1 * mult : 0;
