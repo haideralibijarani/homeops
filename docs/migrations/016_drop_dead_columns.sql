@@ -3,6 +3,13 @@
 -- Also updates subscription_dashboard view and drops orphaned index.
 
 -- ============================================
+-- 0. DROP DEPENDENT VIEW FIRST
+-- ============================================
+
+-- subscription_dashboard depends on subscription_plan — must drop before column
+DROP VIEW IF EXISTS subscription_dashboard;
+
+-- ============================================
 -- 1. HOUSEHOLDS: Drop 6 dead columns
 -- ============================================
 
@@ -55,9 +62,7 @@ ALTER TABLE pending_signups DROP COLUMN IF EXISTS stripe_customer_id;
 -- 5. UPDATE SUBSCRIPTION DASHBOARD VIEW
 -- ============================================
 
--- Remove subscription_plan reference, add cap columns instead
-DROP VIEW IF EXISTS subscription_dashboard;
-
+-- Recreate without subscription_plan, add cap columns instead
 CREATE OR REPLACE VIEW subscription_dashboard AS
 SELECT
   h.id,
