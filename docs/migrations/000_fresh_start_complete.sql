@@ -1,6 +1,6 @@
 -- HomeOps Complete Database Schema - Fresh Start
 -- Run this in Supabase SQL Editor for a clean database setup
--- Combines all migrations (001-015) into a single script
+-- Combines all migrations (001-016) into a single script
 --
 -- Last Updated: 2026-02-09
 -- Pricing: Essential PKR 25K (5 ppl, 30 tasks/day) | Pro PKR 50K (8 ppl, 50 tasks/day) | Max PKR 100K (15 ppl, 100 tasks/day)
@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS households (
   name TEXT NOT NULL,
   timezone TEXT DEFAULT 'Asia/Karachi',
   status TEXT DEFAULT 'active' CHECK (status IN ('active', 'suspended', 'cancelled')),
-  address TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
 
   -- Subscriber details (from migration 002)
@@ -26,15 +25,11 @@ CREATE TABLE IF NOT EXISTS households (
 
   -- Subscription management (from migration 002)
   subscription_status TEXT DEFAULT 'trial' CHECK (subscription_status IN ('trial', 'active', 'past_due', 'cancelled', 'expired')),
-  subscription_plan TEXT CHECK (subscription_plan IN ('monthly', 'annual', NULL)),
   subscription_expires_at TIMESTAMPTZ,
 
   -- Payment tracking (from migration 002)
   last_payment_at TIMESTAMPTZ,
   last_payment_amount DECIMAL(10,2),
-  payment_method TEXT,
-  payment_provider TEXT,
-  payment_provider_customer_id TEXT,
 
   -- Trial/Grace periods (from migration 002)
   trial_ends_at TIMESTAMPTZ,
@@ -48,7 +43,6 @@ CREATE TABLE IF NOT EXISTS households (
   cap_tasks_per_day INTEGER DEFAULT 30,
   cap_messages_per_month INTEGER DEFAULT 10000,
   cap_voice_notes_per_staff_month INTEGER DEFAULT 250,
-  stripe_subscription_id TEXT,
   onboarded_at TIMESTAMPTZ,
   onboarding_source TEXT DEFAULT 'whatsapp',
 
@@ -63,7 +57,6 @@ CREATE TABLE IF NOT EXISTS members (
   name TEXT NOT NULL,
   whatsapp TEXT NOT NULL,
   role TEXT DEFAULT 'member' CHECK (role IN ('admin', 'member')),
-  language_pref TEXT DEFAULT NULL,  -- NULL = inherit from household (from migration 008)
   opt_in_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -106,7 +99,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   task_complexity TEXT DEFAULT 'complex' CHECK (task_complexity IN ('simple', 'complex')),
   reminder_count INTEGER DEFAULT 0,
   last_reminder_at TIMESTAMPTZ,
-  escalated_at TIMESTAMPTZ,
   max_reminders INTEGER DEFAULT 3
 );
 
@@ -168,17 +160,8 @@ CREATE TABLE IF NOT EXISTS pending_signups (
   -- Members JSON: [{"name": "...", "whatsapp": "...", "role": "member|staff"}]
   members_json JSONB DEFAULT '[]'::JSONB,
 
-  -- Granular language settings JSON (from migration 010)
-  -- {"tts_language_staff": "ur", "tts_language_members": "en", "text_language_staff": "ur", "text_language_members": "en", "digest_language": "en"}
-  language_settings_json JSONB DEFAULT NULL,
-
   -- Plan selection (updated in 015 for Essential/Pro/Max)
   selected_plan TEXT NOT NULL CHECK (selected_plan IN ('essential', 'pro', 'max', 'starter', 'family', 'premium', 'custom')),
-  billing_cycle TEXT DEFAULT 'monthly' CHECK (billing_cycle IN ('monthly')),
-
-  -- Stripe tracking (for future Phase 3)
-  stripe_session_id TEXT,
-  stripe_customer_id TEXT,
 
   -- Local payment tracking (from migration 007)
   payment_method TEXT CHECK (payment_method IN ('jazzcash', 'easypaisa', 'bank_transfer', NULL)),
@@ -265,11 +248,8 @@ CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
 CREATE INDEX IF NOT EXISTS idx_payments_created_at ON payments(created_at);
 CREATE INDEX IF NOT EXISTS idx_households_subscription_status ON households(subscription_status);
 CREATE INDEX IF NOT EXISTS idx_households_subscription_expires_at ON households(subscription_expires_at);
-CREATE INDEX IF NOT EXISTS idx_households_stripe_subscription ON households(stripe_subscription_id);
-
 -- Onboarding indexes
 CREATE INDEX IF NOT EXISTS idx_pending_signups_whatsapp ON pending_signups(subscriber_whatsapp);
-CREATE INDEX IF NOT EXISTS idx_pending_signups_stripe_session ON pending_signups(stripe_session_id);
 CREATE INDEX IF NOT EXISTS idx_pending_signups_status ON pending_signups(status);
 CREATE INDEX IF NOT EXISTS idx_pending_signups_expires_at ON pending_signups(expires_at);
 CREATE INDEX IF NOT EXISTS idx_pending_signups_payment_method ON pending_signups(payment_method) WHERE status = 'awaiting_payment';
@@ -427,7 +407,6 @@ SELECT
   h.subscriber_whatsapp,
   h.subscriber_email,
   h.subscription_status,
-  h.subscription_plan,
   h.plan_tier,
   h.subscribed_at,
   h.subscription_expires_at,
@@ -435,6 +414,8 @@ SELECT
   h.last_payment_amount,
   h.trial_ends_at,
   h.grace_period_ends_at,
+  h.cap_tasks_per_day,
+  h.cap_messages_per_month,
   CASE
     WHEN h.subscription_status = 'trial' THEN h.trial_ends_at - NOW()
     WHEN h.subscription_status IN ('active', 'past_due') THEN h.subscription_expires_at - NOW()
@@ -484,7 +465,7 @@ COMMENT ON COLUMN households.cap_voice_notes_per_staff_month IS 'Max voice notes
 COMMENT ON TABLE usage_events IS 'Log of every billable action per household for usage tracking and cap enforcement';
 COMMENT ON TABLE usage_daily IS 'Aggregated daily usage counts per household (populated nightly by WF6)';
 COMMENT ON COLUMN households.subscription_status IS 'trial=new, active=paid, past_due=grace period, cancelled=user cancelled, expired=payment failed';
-COMMENT ON COLUMN pending_signups.members_json IS 'JSON array: [{"name": "...", "whatsapp": "...", "role": "member|staff", "language_pref": "en"}]';
+COMMENT ON COLUMN pending_signups.members_json IS 'JSON array: [{"name": "...", "whatsapp": "...", "role": "member|staff"}]';
 COMMENT ON COLUMN pending_signups.status IS 'pending=form submitted, payment_started=redirected to payment, awaiting_payment=local payment pending, completed=household created, expired=timeout, cancelled=user cancelled';
 COMMENT ON COLUMN pending_signups.payment_method IS 'Local payment method: jazzcash, easypaisa, or bank_transfer';
 COMMENT ON COLUMN pending_signups.payment_reference IS 'Transaction ID provided by user for verification';
