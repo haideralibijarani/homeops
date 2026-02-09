@@ -1,9 +1,9 @@
 -- HomeOps Complete Database Schema - Fresh Start
 -- Run this in Supabase SQL Editor for a clean database setup
--- Combines all migrations (001-007) into a single script
+-- Combines all migrations (001-015) into a single script
 --
 -- Last Updated: 2026-02-09
--- Pricing: Base PKR 15,000 (3 people) + PKR 5,000/extra person + PKR 5,000/staff voice notes
+-- Pricing: Essential PKR 25K (5 ppl, 30 tasks/day) | Pro PKR 50K (8 ppl, 50 tasks/day) | Max PKR 100K (15 ppl, 100 tasks/day)
 
 -- ============================================
 -- PART 1: CORE TABLES
@@ -40,9 +40,14 @@ CREATE TABLE IF NOT EXISTS households (
   trial_ends_at TIMESTAMPTZ,
   grace_period_ends_at TIMESTAMPTZ,
 
-  -- Plan tier (from migration 005, updated in 014 for custom pricing)
-  plan_tier TEXT DEFAULT 'custom' CHECK (plan_tier IN ('starter', 'family', 'premium', 'custom')),
-  max_members INTEGER DEFAULT 999,
+  -- Plan tier (from migration 005, updated in 015 for Essential/Pro/Max)
+  plan_tier TEXT DEFAULT 'essential' CHECK (plan_tier IN ('essential', 'pro', 'max', 'starter', 'family', 'premium', 'custom')),
+  max_members INTEGER DEFAULT 5,
+
+  -- Usage caps (from migration 015)
+  cap_tasks_per_day INTEGER DEFAULT 30,
+  cap_messages_per_month INTEGER DEFAULT 10000,
+  cap_voice_notes_per_staff_month INTEGER DEFAULT 250,
   stripe_subscription_id TEXT,
   onboarded_at TIMESTAMPTZ,
   onboarding_source TEXT DEFAULT 'whatsapp',
@@ -134,7 +139,7 @@ CREATE TABLE IF NOT EXISTS payments (
   payment_provider TEXT,
   provider_payment_id TEXT,
   provider_response JSONB,
-  plan TEXT CHECK (plan IN ('monthly', 'annual', 'starter', 'family', 'premium', 'custom')),
+  plan TEXT CHECK (plan IN ('monthly', 'annual', 'essential', 'pro', 'max', 'starter', 'family', 'premium', 'custom')),
   period_start TIMESTAMPTZ,
   period_end TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -167,8 +172,8 @@ CREATE TABLE IF NOT EXISTS pending_signups (
   -- {"tts_language_staff": "ur", "tts_language_members": "en", "text_language_staff": "ur", "text_language_members": "en", "digest_language": "en"}
   language_settings_json JSONB DEFAULT NULL,
 
-  -- Plan selection (updated in 014 for custom pricing)
-  selected_plan TEXT NOT NULL CHECK (selected_plan IN ('starter', 'family', 'premium', 'custom')),
+  -- Plan selection (updated in 015 for Essential/Pro/Max)
+  selected_plan TEXT NOT NULL CHECK (selected_plan IN ('essential', 'pro', 'max', 'starter', 'family', 'premium', 'custom')),
   billing_cycle TEXT DEFAULT 'monthly' CHECK (billing_cycle IN ('monthly')),
 
   -- Stripe tracking (for future Phase 3)
@@ -208,6 +213,37 @@ CREATE TABLE IF NOT EXISTS app_config (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Usage event log (from migration 015)
+CREATE TABLE IF NOT EXISTS usage_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  household_id UUID NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL CHECK (event_type IN (
+    'message_inbound', 'message_outbound',
+    'voice_note_inbound', 'voice_note_outbound',
+    'task_created', 'task_completed',
+    'stt_transcription', 'tts_generation', 'ai_classification'
+  )),
+  service TEXT NOT NULL CHECK (service IN ('twilio', 'openai', 'system')),
+  details JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Aggregated daily usage counts (from migration 015)
+CREATE TABLE IF NOT EXISTS usage_daily (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  household_id UUID NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  tasks_created INTEGER DEFAULT 0,
+  messages_inbound INTEGER DEFAULT 0,
+  messages_outbound INTEGER DEFAULT 0,
+  voice_notes_inbound INTEGER DEFAULT 0,
+  voice_notes_outbound INTEGER DEFAULT 0,
+  stt_minutes DECIMAL(8,2) DEFAULT 0,
+  tts_characters INTEGER DEFAULT 0,
+  ai_calls INTEGER DEFAULT 0,
+  UNIQUE(household_id, date)
+);
+
 -- ============================================
 -- PART 4: INDEXES
 -- ============================================
@@ -243,6 +279,11 @@ CREATE INDEX IF NOT EXISTS idx_owner_whitelist_whatsapp ON owner_whitelist(whats
 -- Reminder query index
 CREATE INDEX IF NOT EXISTS idx_tasks_due_at_status ON tasks(due_at, status) WHERE due_at IS NOT NULL AND status NOT IN ('completed', 'cancelled', 'problem');
 
+-- Usage tracking indexes (from migration 015)
+CREATE INDEX IF NOT EXISTS idx_usage_events_household_date ON usage_events(household_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_usage_events_type ON usage_events(event_type, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_usage_daily_household_date ON usage_daily(household_id, date DESC);
+
 -- ============================================
 -- PART 5: ROW LEVEL SECURITY
 -- ============================================
@@ -264,6 +305,8 @@ GRANT ALL ON owner_whitelist TO authenticated;
 GRANT ALL ON app_config TO authenticated;
 GRANT ALL ON pending_signups TO authenticated;
 GRANT ALL ON payments TO authenticated;
+GRANT ALL ON usage_events TO authenticated;
+GRANT ALL ON usage_daily TO authenticated;
 
 -- ============================================
 -- PART 6: HELPER FUNCTIONS
@@ -297,15 +340,18 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 GRANT EXECUTE ON FUNCTION get_config(TEXT) TO authenticated;
 
--- Get plan price in PKR (from migration 007)
+-- Get plan base price in PKR (from migration 007, updated in 015)
 CREATE OR REPLACE FUNCTION get_plan_price(plan_name TEXT)
 RETURNS DECIMAL(10,2) AS $$
 BEGIN
   RETURN CASE plan_name
-    WHEN 'starter' THEN 15000.00
-    WHEN 'family' THEN 25000.00
-    WHEN 'premium' THEN 35000.00
-    WHEN 'custom' THEN 15000.00  -- Base price; actual total varies per household
+    WHEN 'essential' THEN 25000.00
+    WHEN 'pro' THEN 50000.00
+    WHEN 'max' THEN 100000.00
+    WHEN 'starter' THEN 15000.00   -- Legacy
+    WHEN 'family' THEN 25000.00    -- Legacy
+    WHEN 'premium' THEN 35000.00   -- Legacy
+    WHEN 'custom' THEN 15000.00    -- Legacy
     ELSE 0.00
   END;
 END;
@@ -430,8 +476,13 @@ COMMENT ON TABLE pending_signups IS 'Temporary storage for signups awaiting paym
 COMMENT ON TABLE owner_whitelist IS 'Phone numbers that auto-activate without payment (for testing/owner use)';
 COMMENT ON TABLE app_config IS 'Application configuration and secrets';
 
-COMMENT ON COLUMN households.plan_tier IS 'Plan type: custom (base+addons), or legacy starter/family/premium';
-COMMENT ON COLUMN households.max_members IS 'Maximum household people. 999 = unlimited (custom plan)';
+COMMENT ON COLUMN households.plan_tier IS 'Plan tier: essential (25K, 30/day), pro (50K, 50/day), max (100K, 100/day), or legacy tiers';
+COMMENT ON COLUMN households.max_members IS 'Max people. Essential=5, Pro=8, Max=15';
+COMMENT ON COLUMN households.cap_tasks_per_day IS 'Max tasks per day. Essential=30, Pro=50, Max=100';
+COMMENT ON COLUMN households.cap_messages_per_month IS 'Max messages per month. Essential=10000, Pro=20000, Max=40000';
+COMMENT ON COLUMN households.cap_voice_notes_per_staff_month IS 'Max voice notes per staff per month. All plans=250';
+COMMENT ON TABLE usage_events IS 'Log of every billable action per household for usage tracking and cap enforcement';
+COMMENT ON TABLE usage_daily IS 'Aggregated daily usage counts per household (populated nightly by WF6)';
 COMMENT ON COLUMN households.subscription_status IS 'trial=new, active=paid, past_due=grace period, cancelled=user cancelled, expired=payment failed';
 COMMENT ON COLUMN pending_signups.members_json IS 'JSON array: [{"name": "...", "whatsapp": "...", "role": "member|staff", "language_pref": "en"}]';
 COMMENT ON COLUMN pending_signups.status IS 'pending=form submitted, payment_started=redirected to payment, awaiting_payment=local payment pending, completed=household created, expired=timeout, cancelled=user cancelled';
@@ -458,7 +509,7 @@ COMMENT ON FUNCTION get_plan_price IS 'Get monthly price in PKR for a plan tier'
 -- Test functions:
 -- SELECT is_whitelisted('+923001234567');
 -- SELECT get_config('admin_activate_secret');
--- SELECT get_plan_price('custom'), get_plan_price('starter'), get_plan_price('family'), get_plan_price('premium');
+-- SELECT get_plan_price('essential'), get_plan_price('pro'), get_plan_price('max');
 
 -- ============================================
 -- DONE! Your HomeOps database is ready.
