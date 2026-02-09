@@ -2,8 +2,8 @@
 -- Run this in Supabase SQL Editor for a clean database setup
 -- Combines all migrations (001-007) into a single script
 --
--- Last Updated: 2026-02-03
--- Plan Pricing: Starter PKR 15,000 | Family PKR 25,000 | Premium PKR 35,000
+-- Last Updated: 2026-02-09
+-- Pricing: Base PKR 15,000 (3 people) + PKR 5,000/extra person + PKR 5,000/staff voice notes
 
 -- ============================================
 -- PART 1: CORE TABLES
@@ -40,9 +40,9 @@ CREATE TABLE IF NOT EXISTS households (
   trial_ends_at TIMESTAMPTZ,
   grace_period_ends_at TIMESTAMPTZ,
 
-  -- Plan tier (from migration 005)
-  plan_tier TEXT DEFAULT 'starter' CHECK (plan_tier IN ('starter', 'family', 'premium')),
-  max_members INTEGER DEFAULT 3,
+  -- Plan tier (from migration 005, updated in 014 for custom pricing)
+  plan_tier TEXT DEFAULT 'custom' CHECK (plan_tier IN ('starter', 'family', 'premium', 'custom')),
+  max_members INTEGER DEFAULT 999,
   stripe_subscription_id TEXT,
   onboarded_at TIMESTAMPTZ,
   onboarding_source TEXT DEFAULT 'whatsapp',
@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS payments (
   payment_provider TEXT,
   provider_payment_id TEXT,
   provider_response JSONB,
-  plan TEXT CHECK (plan IN ('monthly', 'annual', 'starter', 'family', 'premium')),
+  plan TEXT CHECK (plan IN ('monthly', 'annual', 'starter', 'family', 'premium', 'custom')),
   period_start TIMESTAMPTZ,
   period_end TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -167,8 +167,8 @@ CREATE TABLE IF NOT EXISTS pending_signups (
   -- {"tts_language_staff": "ur", "tts_language_members": "en", "text_language_staff": "ur", "text_language_members": "en", "digest_language": "en"}
   language_settings_json JSONB DEFAULT NULL,
 
-  -- Plan selection
-  selected_plan TEXT NOT NULL CHECK (selected_plan IN ('starter', 'family', 'premium')),
+  -- Plan selection (updated in 014 for custom pricing)
+  selected_plan TEXT NOT NULL CHECK (selected_plan IN ('starter', 'family', 'premium', 'custom')),
   billing_cycle TEXT DEFAULT 'monthly' CHECK (billing_cycle IN ('monthly')),
 
   -- Stripe tracking (for future Phase 3)
@@ -305,6 +305,7 @@ BEGIN
     WHEN 'starter' THEN 15000.00
     WHEN 'family' THEN 25000.00
     WHEN 'premium' THEN 35000.00
+    WHEN 'custom' THEN 15000.00  -- Base price; actual total varies per household
     ELSE 0.00
   END;
 END;
@@ -429,8 +430,8 @@ COMMENT ON TABLE pending_signups IS 'Temporary storage for signups awaiting paym
 COMMENT ON TABLE owner_whitelist IS 'Phone numbers that auto-activate without payment (for testing/owner use)';
 COMMENT ON TABLE app_config IS 'Application configuration and secrets';
 
-COMMENT ON COLUMN households.plan_tier IS 'starter=3 people, family=6 people, premium=12 people';
-COMMENT ON COLUMN households.max_members IS 'Maximum household people allowed by plan (combined members+staff)';
+COMMENT ON COLUMN households.plan_tier IS 'Plan type: custom (base+addons), or legacy starter/family/premium';
+COMMENT ON COLUMN households.max_members IS 'Maximum household people. 999 = unlimited (custom plan)';
 COMMENT ON COLUMN households.subscription_status IS 'trial=new, active=paid, past_due=grace period, cancelled=user cancelled, expired=payment failed';
 COMMENT ON COLUMN pending_signups.members_json IS 'JSON array: [{"name": "...", "whatsapp": "...", "role": "member|staff", "language_pref": "en"}]';
 COMMENT ON COLUMN pending_signups.status IS 'pending=form submitted, payment_started=redirected to payment, awaiting_payment=local payment pending, completed=household created, expired=timeout, cancelled=user cancelled';
@@ -457,7 +458,7 @@ COMMENT ON FUNCTION get_plan_price IS 'Get monthly price in PKR for a plan tier'
 -- Test functions:
 -- SELECT is_whitelisted('+923001234567');
 -- SELECT get_config('admin_activate_secret');
--- SELECT get_plan_price('starter'), get_plan_price('family'), get_plan_price('premium');
+-- SELECT get_plan_price('custom'), get_plan_price('starter'), get_plan_price('family'), get_plan_price('premium');
 
 -- ============================================
 -- DONE! Your HomeOps database is ready.

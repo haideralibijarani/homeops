@@ -28,16 +28,6 @@
     }
   </script>
   <style>
-    .plan-card {
-      transition: all 0.2s ease;
-    }
-    .plan-card:hover {
-      transform: translateY(-2px);
-    }
-    .plan-card.selected {
-      border-color: #16a34a;
-      background-color: #f0fdf4;
-    }
     .member-item {
       animation: slideIn 0.2s ease;
     }
@@ -184,145 +174,63 @@
           </svg>
           Add Person
         </button>
-
-        <p id="memberLimitWarning" class="text-sm text-amber-600 mt-3 hidden">
-          You've reached the limit for your selected plan. Upgrade to add more people.
-        </p>
       </section>
 
-      <!-- Step 4: Plan Selection -->
+      <!-- Step 4: Pricing Summary -->
       <section class="bg-white rounded-xl border border-gray-200 p-6">
         <div class="flex items-center gap-3 mb-6">
           <span class="w-8 h-8 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center font-semibold text-sm">4</span>
-          <h3 class="text-lg font-semibold text-gray-900">Choose Your Plan</h3>
+          <h3 class="text-lg font-semibold text-gray-900">Your Plan</h3>
         </div>
 
-        <div class="grid gap-4 sm:grid-cols-3">
-          <!-- Starter Plan -->
-          <label class="plan-card cursor-pointer block border-2 border-gray-200 rounded-xl p-4 hover:border-brand-300">
-            <input type="radio" name="selected_plan" value="starter" class="sr-only" checked>
-            <div class="text-center">
-              <h4 class="font-semibold text-gray-900 mb-1">Starter</h4>
-              <p class="text-3xl font-bold text-gray-900 mb-1">PKR 15,000</p>
-              <p class="text-sm text-gray-500 mb-4">/month</p>
-              <ul class="text-sm text-gray-600 space-y-2">
-                <li class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                  </svg>
-                  Up to 3 members
-                </li>
-                <li class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                  </svg>
-                  Unlimited tasks
-                </li>
-                <li class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                  </svg>
-                  WhatsApp support
-                </li>
-              </ul>
-            </div>
-            <div class="mt-4 pt-4 border-t border-gray-100">
-              <div class="w-full py-2 bg-gray-100 rounded-lg text-center text-sm font-medium text-gray-700 plan-button">
-                Selected
-              </div>
-            </div>
-          </label>
-
-          <!-- Family Plan -->
-          <label class="plan-card cursor-pointer block border-2 border-gray-200 rounded-xl p-4 hover:border-brand-300 relative">
-            <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
-              Popular
-            </div>
-            <input type="radio" name="selected_plan" value="family" class="sr-only">
-            <div class="text-center">
-              <h4 class="font-semibold text-gray-900 mb-1">Family</h4>
-              <p class="text-3xl font-bold text-gray-900 mb-1">PKR 25,000</p>
-              <p class="text-sm text-gray-500 mb-4">/month</p>
-              <ul class="text-sm text-gray-600 space-y-2">
-                <li class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                  </svg>
-                  Up to 6 members
-                </li>
-                <li class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                  </svg>
-                  Unlimited tasks
-                </li>
-                <li class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                  </svg>
-                  Priority support
-                </li>
-              </ul>
-            </div>
-            <div class="mt-4 pt-4 border-t border-gray-100">
-              <div class="w-full py-2 bg-gray-100 rounded-lg text-center text-sm font-medium text-gray-700 plan-button">
-                Select Plan
-              </div>
-            </div>
-          </label>
-
-          <!-- Premium Plan -->
-          <label class="plan-card cursor-pointer block border-2 border-gray-200 rounded-xl p-4 hover:border-brand-300">
-            <input type="radio" name="selected_plan" value="premium" class="sr-only">
-            <div class="text-center">
-              <h4 class="font-semibold text-gray-900 mb-1">Premium</h4>
-              <p class="text-3xl font-bold text-gray-900 mb-1">PKR 35,000</p>
-              <p class="text-sm text-gray-500 mb-4">/month</p>
-              <ul class="text-sm text-gray-600 space-y-2">
-                <li class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                  </svg>
-                  Up to 12 members
-                </li>
-                <li class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                  </svg>
-                  Unlimited tasks
-                </li>
-                <li class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                  </svg>
-                  Dedicated support
-                </li>
-              </ul>
-            </div>
-            <div class="mt-4 pt-4 border-t border-gray-100">
-              <div class="w-full py-2 bg-gray-100 rounded-lg text-center text-sm font-medium text-gray-700 plan-button">
-                Select Plan
-              </div>
-            </div>
-          </label>
+        <!-- What's included -->
+        <div class="mb-5">
+          <ul class="text-sm text-gray-600 space-y-2">
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Base plan includes you + 2 people (3 total)
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Unlimited tasks &amp; WhatsApp support
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Add more people for PKR 5,000/person/month
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Voice notes for staff: PKR 5,000/staff/month (opt-in)
+            </li>
+          </ul>
         </div>
 
-        <!-- Pricing Summary -->
-        <div id="pricingSummary" class="mt-6">
-          <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between text-gray-600">
-                <span id="pricingPlanLabel">Starter Plan</span>
-                <span id="pricingPlanAmount">PKR 15,000</span>
-              </div>
-              <div id="pricingVoiceRow" class="flex justify-between text-gray-600 hidden">
-                <span id="pricingVoiceLabel">Voice Notes (0 staff)</span>
-                <span id="pricingVoiceAmount">PKR 0</span>
-              </div>
-              <div class="border-t border-gray-200 pt-2 flex justify-between font-semibold text-gray-900">
-                <span>Monthly Total</span>
-                <span id="pricingTotal">PKR 15,000</span>
-              </div>
+        <!-- Price breakdown -->
+        <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between text-gray-600">
+              <span>Base Plan (3 people included)</span>
+              <span>PKR 15,000</span>
+            </div>
+            <div id="pricingExtraRow" class="flex justify-between text-gray-600 hidden">
+              <span id="pricingExtraLabel">Extra People (0)</span>
+              <span id="pricingExtraAmount">PKR 0</span>
+            </div>
+            <div id="pricingVoiceRow" class="flex justify-between text-gray-600 hidden">
+              <span id="pricingVoiceLabel">Voice Notes (0 staff)</span>
+              <span id="pricingVoiceAmount">PKR 0</span>
+            </div>
+            <div class="border-t border-gray-200 pt-2 flex justify-between font-semibold text-gray-900">
+              <span>Monthly Total</span>
+              <span id="pricingTotal">PKR 15,000</span>
             </div>
           </div>
         </div>
@@ -378,30 +286,19 @@
   <script>
     // Configuration
     const API_ENDPOINT = 'https://specializing-presented-recovery-mailman.trycloudflare.com/webhook/signup-form';
-    const PLAN_LIMITS = {
-      starter: 3,
-      family: 6,
-      premium: 12
-    };
-    const PLAN_PRICES = {
-      starter: 15000,
-      family: 25000,
-      premium: 35000
-    };
-    const VOICE_NOTES_PRICE = 5000; // PKR per staff per month
+    const BASE_PRICE = 15000;         // PKR base plan
+    const BASE_INCLUDED = 3;          // People included in base (admin + 2)
+    const EXTRA_PERSON_PRICE = 5000;  // PKR per extra person/month
+    const VOICE_NOTES_PRICE = 5000;   // PKR per staff voice notes/month
 
     // State
     let members = [];
-    let selectedPlan = 'starter';
 
     // DOM Elements
     const form = document.getElementById('signupForm');
     const membersContainer = document.getElementById('membersContainer');
     const addMemberBtn = document.getElementById('addMemberBtn');
     const memberCount = document.getElementById('memberCount');
-    const memberLimitWarning = document.getElementById('memberLimitWarning');
-    const planCards = document.querySelectorAll('.plan-card');
-    const planInputs = document.querySelectorAll('input[name="selected_plan"]');
     const submitBtn = document.getElementById('submitBtn');
     const submitText = document.getElementById('submitText');
     const submitSpinner = document.getElementById('submitSpinner');
@@ -420,56 +317,38 @@
         document.getElementById('subscriberWhatsapp').value = decodeURIComponent(phone);
       }
 
-      // Plan selection
-      planInputs.forEach(input => {
-        input.addEventListener('change', (e) => {
-          selectedPlan = e.target.value;
-          updatePlanUI();
-          checkMemberLimit();
-          updatePricing();
-        });
-      });
-
       // Add member button
       addMemberBtn.addEventListener('click', addMember);
 
       // Form submission
       form.addEventListener('submit', handleSubmit);
 
-      // Initial UI update
-      updatePlanUI();
+      // Initial pricing
       updatePricing();
     }
 
-    function updatePlanUI() {
-      planCards.forEach(card => {
-        const input = card.querySelector('input[name="selected_plan"]');
-        const button = card.querySelector('.plan-button');
-
-        if (input.checked) {
-          card.classList.add('selected');
-          button.textContent = 'Selected';
-          button.classList.remove('bg-gray-100', 'text-gray-700');
-          button.classList.add('bg-brand-600', 'text-white');
-        } else {
-          card.classList.remove('selected');
-          button.textContent = 'Select Plan';
-          button.classList.add('bg-gray-100', 'text-gray-700');
-          button.classList.remove('bg-brand-600', 'text-white');
-        }
-      });
-    }
-
     function updatePricing() {
-      const planNames = { starter: 'Starter', family: 'Family', premium: 'Premium' };
-      const basePlan = PLAN_PRICES[selectedPlan];
+      // Total people = admin (1) + members added
+      const totalPeople = 1 + members.length;
+      const extraPeople = Math.max(0, totalPeople - BASE_INCLUDED);
+      const extraTotal = extraPeople * EXTRA_PERSON_PRICE;
+
       const voiceStaffCount = members.filter(m => m.role === 'staff' && m.voice_notes_enabled).length;
       const voiceTotal = voiceStaffCount * VOICE_NOTES_PRICE;
-      const total = basePlan + voiceTotal;
 
-      document.getElementById('pricingPlanLabel').textContent = `${planNames[selectedPlan]} Plan`;
-      document.getElementById('pricingPlanAmount').textContent = `PKR ${basePlan.toLocaleString()}`;
+      const total = BASE_PRICE + extraTotal + voiceTotal;
 
+      // Extra people row
+      const extraRow = document.getElementById('pricingExtraRow');
+      if (extraPeople > 0) {
+        extraRow.classList.remove('hidden');
+        document.getElementById('pricingExtraLabel').textContent = `Extra People (${extraPeople} \u00d7 PKR ${EXTRA_PERSON_PRICE.toLocaleString()})`;
+        document.getElementById('pricingExtraAmount').textContent = `PKR ${extraTotal.toLocaleString()}`;
+      } else {
+        extraRow.classList.add('hidden');
+      }
+
+      // Voice notes row
       const voiceRow = document.getElementById('pricingVoiceRow');
       if (voiceStaffCount > 0) {
         voiceRow.classList.remove('hidden');
@@ -483,13 +362,6 @@
     }
 
     function addMember() {
-      const limit = PLAN_LIMITS[selectedPlan];
-      // Subscriber counts as 1, so members can be limit - 1
-      if (members.length >= limit - 1) {
-        memberLimitWarning.classList.remove('hidden');
-        return;
-      }
-
       const memberId = Date.now();
       members.push({ id: memberId, name: '', whatsapp: '', role: 'member', title: '', voice_notes_enabled: false, voice_language: null });
 
@@ -562,7 +434,7 @@
 
       membersContainer.insertAdjacentHTML('beforeend', memberHtml);
       updateMemberCount();
-      checkMemberLimit();
+      updatePricing();
 
       // Add event listeners to new member inputs
       const memberEl = membersContainer.querySelector(`.member-item[data-member-id="${memberId}"]`);
@@ -586,7 +458,6 @@
         if (member) {
           member.voice_notes_enabled = e.target.checked;
           if (e.target.checked) {
-            // Default language to household setting
             const defaultLang = document.getElementById('ttsLanguageStaff').value;
             member.voice_language = defaultLang;
             const langSelect = memberEl.querySelector('.member-voice-language');
@@ -650,7 +521,6 @@
       const memberEl = membersContainer.querySelector(`[data-member-id="${memberId}"]`);
       if (memberEl) memberEl.remove();
       updateMemberCount();
-      checkMemberLimit();
       updatePricing();
 
       // Update person numbers
@@ -676,38 +546,20 @@
       memberCount.textContent = text;
     }
 
-    function checkMemberLimit() {
-      const limit = PLAN_LIMITS[selectedPlan];
-      // Subscriber counts as 1
-      if (members.length >= limit - 1) {
-        addMemberBtn.classList.add('opacity-50', 'cursor-not-allowed');
-        memberLimitWarning.classList.remove('hidden');
-      } else {
-        addMemberBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        memberLimitWarning.classList.add('hidden');
-      }
-    }
-
     function normalizePhone(phone) {
-      // Remove spaces, dashes, parentheses
       let normalized = phone.replace(/[\s\-\(\)]/g, '');
-
-      // Ensure starts with +
       if (!normalized.startsWith('+')) {
-        // Assume Pakistan if no country code
         if (normalized.startsWith('0')) {
           normalized = '+92' + normalized.substring(1);
         } else {
           normalized = '+' + normalized;
         }
       }
-
       return normalized;
     }
 
     function validatePhone(phone) {
       const normalized = normalizePhone(phone);
-      // Basic E.164 validation: + followed by 10-15 digits
       return /^\+[1-9]\d{9,14}$/.test(normalized);
     }
 
@@ -728,7 +580,6 @@
     }
 
     function showSuccess(title, message) {
-      // Hide form, show success
       form.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
       formSection.classList.add('hidden');
       successSection.classList.remove('hidden');
@@ -757,7 +608,13 @@
         }
       }
 
-      // Build form data (nested structure for workflow)
+      // Calculate pricing
+      const totalPeople = 1 + validMembers.length;
+      const extraPeople = Math.max(0, totalPeople - BASE_INCLUDED);
+      const voiceStaffCount = validMembers.filter(m => m.role === 'staff' && m.voice_notes_enabled).length;
+      const monthlyTotal = BASE_PRICE + (extraPeople * EXTRA_PERSON_PRICE) + (voiceStaffCount * VOICE_NOTES_PRICE);
+
+      // Build form data
       const formData = {
         subscriber: {
           name: document.getElementById('subscriberName').value.trim(),
@@ -769,7 +626,16 @@
           timezone: document.getElementById('timezone').value,
           address: document.getElementById('address').value.trim()
         },
-        plan: selectedPlan,
+        plan: 'custom',
+        pricing: {
+          base_price: BASE_PRICE,
+          base_included: BASE_INCLUDED,
+          extra_people_count: extraPeople,
+          extra_people_total: extraPeople * EXTRA_PERSON_PRICE,
+          voice_notes_count: voiceStaffCount,
+          voice_notes_total: voiceStaffCount * VOICE_NOTES_PRICE,
+          monthly_total: monthlyTotal
+        },
         tts_language_staff: document.getElementById('ttsLanguageStaff').value,
         members: validMembers.map(m => ({
           name: m.name.trim(),
@@ -798,9 +664,7 @@
           throw new Error(data.error || data.message || 'Something went wrong');
         }
 
-        // Handle response based on status
         if (data.status === 'activated') {
-          // Whitelisted user - immediately activated
           showSuccess(
             'Welcome to HomeOps!',
             `<p class="mb-4">Your household <strong>"${formData.household.name}"</strong> is now active.</p>
@@ -808,11 +672,11 @@
             <p class="text-sm text-gray-500">Send a message to our WhatsApp number to get started.</p>`
           );
         } else if (data.status === 'awaiting_payment') {
-          // Non-whitelisted user - awaiting manual activation
           showSuccess(
             'Thank You for Signing Up!',
             `<p class="mb-4">Your signup for <strong>"${formData.household.name}"</strong> is pending activation.</p>
             <div class="bg-gray-50 rounded-lg p-4 mb-4 text-left">
+              <p class="font-medium text-gray-900 mb-2">Monthly amount: <strong>PKR ${monthlyTotal.toLocaleString()}</strong></p>
               <p class="font-medium text-gray-900 mb-2">Please complete payment via:</p>
               <ul class="text-sm text-gray-600 space-y-1">
                 <li><strong>JazzCash:</strong> ${data.payment_jazzcash || '03XX-XXXXXXX'}</li>
