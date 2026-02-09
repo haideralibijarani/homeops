@@ -1,6 +1,6 @@
 -- HomeOps Complete Database Schema - Fresh Start
 -- Run this in Supabase SQL Editor for a clean database setup
--- Combines all migrations (001-016) into a single script
+-- Combines all migrations (001-019) into a single script
 --
 -- Last Updated: 2026-02-09
 -- Pricing: Essential PKR 25K (5 ppl, 30 tasks/day) | Pro PKR 50K (8 ppl, 50 tasks/day) | Max PKR 100K (15 ppl, 100 tasks/day)
@@ -47,7 +47,10 @@ CREATE TABLE IF NOT EXISTS households (
   onboarding_source TEXT DEFAULT 'whatsapp',
 
   -- Voice note language for staff (from migration 009, simplified in 012)
-  tts_language_staff TEXT DEFAULT 'ur'       -- Voice notes for staff: en/ur
+  tts_language_staff TEXT DEFAULT 'ur',       -- Voice notes for staff: en/ur
+
+  -- Expected monthly payment (from migration 018)
+  expected_monthly_amount DECIMAL(10,2)      -- Base + extra people + voice add-ons
 );
 
 -- Members table (family members)
@@ -69,7 +72,14 @@ CREATE TABLE IF NOT EXISTS staff (
   role TEXT DEFAULT 'staff',
   whatsapp TEXT NOT NULL,
   language_pref TEXT DEFAULT 'en',        -- Per-staff TTS language (en/ur)
-  voice_notes_enabled BOOLEAN DEFAULT false,  -- Premium opt-in: PKR 5,000/staff/month (migration 013)
+  voice_notes_enabled BOOLEAN DEFAULT false,  -- Premium opt-in: PKR 7,000/staff/month on Essential (migration 013)
+
+  -- Voice payment tracking (from migration 017)
+  voice_payment_pending BOOLEAN DEFAULT false,       -- Pending payment for voice activation
+  voice_payment_ref TEXT,                            -- Payment reference from admin
+  voice_payment_proof_url TEXT,                      -- Screenshot URL from Twilio MediaUrl
+  voice_payment_requested_at TIMESTAMPTZ,            -- When activation was requested
+
   opt_in_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -137,7 +147,13 @@ CREATE TABLE IF NOT EXISTS payments (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   completed_at TIMESTAMPTZ,
   failed_at TIMESTAMPTZ,
-  failure_reason TEXT
+  failure_reason TEXT,
+
+  -- Payment verification (from migration 018)
+  expected_amount DECIMAL(10,2),
+  payment_classification TEXT CHECK (payment_classification IN ('full', 'base_only', 'partial', 'overpayment', 'unknown')),
+  addons_activated JSONB,
+  proof_url TEXT
 );
 
 -- ============================================
@@ -224,6 +240,7 @@ CREATE TABLE IF NOT EXISTS usage_daily (
   stt_minutes DECIMAL(8,2) DEFAULT 0,
   tts_characters INTEGER DEFAULT 0,
   ai_calls INTEGER DEFAULT 0,
+  estimated_cost_usd DECIMAL(10,4) DEFAULT 0,
   UNIQUE(household_id, date)
 );
 
@@ -339,6 +356,93 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 
 GRANT EXECUTE ON FUNCTION get_plan_price(TEXT) TO authenticated;
 
+-- Calculate expected monthly amount breakdown (from migration 018)
+CREATE OR REPLACE FUNCTION calculate_expected_amount(p_household_id UUID)
+RETURNS TABLE (
+  base_amount DECIMAL(10,2),
+  extra_people_count INTEGER,
+  extra_people_cost DECIMAL(10,2),
+  voice_staff_count INTEGER,
+  voice_cost DECIMAL(10,2),
+  total_amount DECIMAL(10,2),
+  breakdown TEXT
+) AS $$
+DECLARE
+  v_plan_tier TEXT;
+  v_base_price DECIMAL(10,2);
+  v_included_people INTEGER;
+  v_total_people INTEGER;
+  v_member_count INTEGER;
+  v_staff_count INTEGER;
+  v_extra_people INTEGER;
+  v_extra_cost DECIMAL(10,2);
+  v_voice_count INTEGER;
+  v_voice_price DECIMAL(10,2);
+  v_voice_included BOOLEAN;
+  v_total DECIMAL(10,2);
+  v_parts TEXT[];
+BEGIN
+  SELECT h.plan_tier INTO v_plan_tier
+  FROM households h WHERE h.id = p_household_id;
+
+  IF v_plan_tier IS NULL THEN
+    RETURN QUERY SELECT 0::DECIMAL(10,2), 0, 0::DECIMAL(10,2), 0, 0::DECIMAL(10,2), 0::DECIMAL(10,2), 'Household not found'::TEXT;
+    RETURN;
+  END IF;
+
+  v_base_price := get_plan_price(v_plan_tier);
+
+  CASE v_plan_tier
+    WHEN 'essential' THEN v_included_people := 5; v_voice_included := false; v_voice_price := 7000.00;
+    WHEN 'pro' THEN v_included_people := 8; v_voice_included := true; v_voice_price := 0.00;
+    WHEN 'max' THEN v_included_people := 15; v_voice_included := true; v_voice_price := 0.00;
+    ELSE v_included_people := 5; v_voice_included := false; v_voice_price := 7000.00;
+  END CASE;
+
+  SELECT COUNT(*) INTO v_member_count FROM members m WHERE m.household_id = p_household_id;
+  SELECT COUNT(*) INTO v_staff_count FROM staff s WHERE s.household_id = p_household_id;
+  v_total_people := v_member_count + v_staff_count;
+
+  v_extra_people := GREATEST(0, v_total_people - v_included_people);
+  v_extra_cost := v_extra_people * 5000.00;
+
+  IF v_voice_included THEN
+    v_voice_count := 0;
+  ELSE
+    SELECT COUNT(*) INTO v_voice_count FROM staff s
+    WHERE s.household_id = p_household_id AND (s.voice_notes_enabled = true OR s.voice_payment_pending = true);
+  END IF;
+
+  v_total := v_base_price + v_extra_cost + (v_voice_count * v_voice_price);
+
+  v_parts := ARRAY['Base ' || v_base_price::INTEGER::TEXT];
+  IF v_extra_people > 0 THEN
+    v_parts := v_parts || (v_extra_people || ' extra ' || CASE WHEN v_extra_people = 1 THEN 'person' ELSE 'people' END || ': ' || v_extra_cost::INTEGER::TEXT);
+  END IF;
+  IF v_voice_count > 0 THEN
+    v_parts := v_parts || (v_voice_count || ' voice staff: ' || (v_voice_count * v_voice_price::INTEGER)::TEXT);
+  END IF;
+
+  RETURN QUERY SELECT v_base_price, v_extra_people, v_extra_cost, v_voice_count, (v_voice_count * v_voice_price), v_total, array_to_string(v_parts, ' + ');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION calculate_expected_amount(UUID) TO authenticated;
+
+-- Recalculate and persist expected amount (from migration 018)
+CREATE OR REPLACE FUNCTION recalculate_and_store_expected_amount(p_household_id UUID)
+RETURNS DECIMAL(10,2) AS $$
+DECLARE
+  v_total DECIMAL(10,2);
+BEGIN
+  SELECT cea.total_amount INTO v_total FROM calculate_expected_amount(p_household_id) cea;
+  UPDATE households SET expected_monthly_amount = v_total WHERE id = p_household_id;
+  RETURN v_total;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION recalculate_and_store_expected_amount(UUID) TO authenticated;
+
 -- Expire old signups (from migration 005)
 CREATE OR REPLACE FUNCTION expire_old_signups()
 RETURNS INTEGER AS $$
@@ -398,7 +502,7 @@ CREATE TRIGGER trigger_check_subscription
 -- Drop existing view if it has different structure
 DROP VIEW IF EXISTS subscription_dashboard;
 
--- Subscription dashboard view (from migration 002)
+-- Subscription dashboard view (from migration 002, updated in 019 for costs)
 CREATE OR REPLACE VIEW subscription_dashboard AS
 SELECT
   h.id,
@@ -416,6 +520,7 @@ SELECT
   h.grace_period_ends_at,
   h.cap_tasks_per_day,
   h.cap_messages_per_month,
+  h.expected_monthly_amount,
   CASE
     WHEN h.subscription_status = 'trial' THEN h.trial_ends_at - NOW()
     WHEN h.subscription_status IN ('active', 'past_due') THEN h.subscription_expires_at - NOW()
@@ -423,10 +528,145 @@ SELECT
   END as time_remaining,
   (SELECT COUNT(*) FROM tasks t WHERE t.household_id = h.id) as total_tasks,
   (SELECT COUNT(*) FROM members m WHERE m.household_id = h.id) as total_members,
-  (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id) as total_staff
+  (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id) as total_staff,
+  -- Cost columns (from migration 019)
+  COALESCE((SELECT SUM(ud.estimated_cost_usd) FROM usage_daily ud WHERE ud.household_id = h.id), 0) as all_time_cost_usd,
+  COALESCE((SELECT SUM(ud.estimated_cost_usd) FROM usage_daily ud WHERE ud.household_id = h.id), 0) *
+    COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_exchange_rate_pkr_usd'), '')::DECIMAL, 278) as all_time_cost_pkr
 FROM households h;
 
 GRANT SELECT ON subscription_dashboard TO authenticated;
+
+-- Admin cost dashboard function (from migration 019)
+CREATE OR REPLACE FUNCTION admin_cost_dashboard(admin_secret TEXT)
+RETURNS JSON AS $$
+DECLARE
+  stored_secret TEXT;
+  result JSON;
+BEGIN
+  SELECT value INTO stored_secret FROM app_config WHERE key = 'admin_dashboard_secret';
+  IF stored_secret IS NULL OR admin_secret IS DISTINCT FROM stored_secret THEN
+    RETURN json_build_object('error', 'unauthorized', 'message', 'Invalid admin secret');
+  END IF;
+
+  WITH exchange AS (
+    SELECT COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_exchange_rate_pkr_usd'), '')::DECIMAL, 278) as rate
+  ),
+  cost_rates AS (
+    SELECT
+      COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_twilio_message_usd'), '')::DECIMAL, 0.005) as twilio_msg,
+      COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_openai_stt_per_min_usd'), '')::DECIMAL, 0.006) as stt_min,
+      COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_openai_tts_per_char_usd'), '')::DECIMAL, 0.000015) as tts_char,
+      COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_openai_ai_call_usd'), '')::DECIMAL, 0.001) as ai_call
+  ),
+  household_data AS (
+    SELECT
+      h.id, h.name, h.plan_tier, h.subscription_status, h.expected_monthly_amount, h.subscribed_at, h.created_at,
+      (SELECT COUNT(*) FROM members m WHERE m.household_id = h.id) as member_count,
+      (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id) as staff_count,
+      (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id AND s.voice_notes_enabled = true) as voice_staff_count,
+      COALESCE(SUM(ud.estimated_cost_usd), 0) as all_time_cost_usd,
+      COALESCE(SUM(ud.messages_inbound), 0) as all_time_msgs_in,
+      COALESCE(SUM(ud.messages_outbound), 0) as all_time_msgs_out,
+      COALESCE(SUM(ud.tasks_created), 0) as all_time_tasks,
+      COALESCE(SUM(ud.voice_notes_inbound), 0) as all_time_voice_in,
+      COALESCE(SUM(ud.voice_notes_outbound), 0) as all_time_voice_out,
+      COALESCE(SUM(ud.ai_calls), 0) as all_time_ai_calls,
+      COALESCE(SUM(ud.stt_minutes), 0) as all_time_stt_minutes,
+      COALESCE(SUM(ud.tts_characters), 0) as all_time_tts_characters,
+      COALESCE(SUM(ud.estimated_cost_usd) FILTER (WHERE ud.date >= date_trunc('month', CURRENT_DATE)::DATE), 0) as month_cost_usd,
+      COALESCE(SUM(ud.messages_inbound + ud.messages_outbound) FILTER (WHERE ud.date >= date_trunc('month', CURRENT_DATE)::DATE), 0) as month_messages,
+      COALESCE(SUM(ud.tasks_created) FILTER (WHERE ud.date >= date_trunc('month', CURRENT_DATE)::DATE), 0) as month_tasks,
+      COALESCE(SUM(ud.ai_calls) FILTER (WHERE ud.date >= date_trunc('month', CURRENT_DATE)::DATE), 0) as month_ai_calls,
+      COALESCE(SUM(ud.estimated_cost_usd) FILTER (WHERE ud.date >= CURRENT_DATE - 30), 0) as last_30d_cost_usd,
+      COALESCE(SUM(ud.messages_inbound + ud.messages_outbound + ud.voice_notes_inbound + ud.voice_notes_outbound), 0) * (SELECT twilio_msg FROM cost_rates) as breakdown_twilio,
+      COALESCE(SUM(ud.stt_minutes), 0) * (SELECT stt_min FROM cost_rates) as breakdown_stt,
+      COALESCE(SUM(ud.tts_characters), 0) * (SELECT tts_char FROM cost_rates) as breakdown_tts,
+      COALESCE(SUM(ud.ai_calls), 0) * (SELECT ai_call FROM cost_rates) as breakdown_ai
+    FROM households h
+    LEFT JOIN usage_daily ud ON ud.household_id = h.id
+    GROUP BY h.id, h.name, h.plan_tier, h.subscription_status, h.expected_monthly_amount, h.subscribed_at, h.created_at
+  )
+  SELECT json_build_object(
+    'success', true,
+    'generated_at', NOW(),
+    'exchange_rate', (SELECT rate FROM exchange),
+    'cost_rates', json_build_object(
+      'twilio_message', (SELECT twilio_msg FROM cost_rates),
+      'stt_per_minute', (SELECT stt_min FROM cost_rates),
+      'tts_per_character', (SELECT tts_char FROM cost_rates),
+      'ai_call', (SELECT ai_call FROM cost_rates)
+    ),
+    'households', COALESCE((
+      SELECT json_agg(row_data ORDER BY (row_data->>'month_cost_usd')::DECIMAL DESC)
+      FROM (
+        SELECT json_build_object(
+          'id', hd.id, 'name', hd.name, 'plan_tier', hd.plan_tier,
+          'subscription_status', hd.subscription_status,
+          'member_count', hd.member_count, 'staff_count', hd.staff_count,
+          'voice_staff_count', hd.voice_staff_count,
+          'subscribed_at', hd.subscribed_at, 'created_at', hd.created_at,
+          'revenue', json_build_object(
+            'monthly_pkr', COALESCE(hd.expected_monthly_amount, 0),
+            'monthly_usd', ROUND(COALESCE(hd.expected_monthly_amount, 0) / (SELECT rate FROM exchange), 2)
+          ),
+          'costs', json_build_object(
+            'all_time_usd', ROUND(hd.all_time_cost_usd::NUMERIC, 4),
+            'all_time_pkr', ROUND((hd.all_time_cost_usd * (SELECT rate FROM exchange))::NUMERIC, 2),
+            'current_month_usd', ROUND(hd.month_cost_usd::NUMERIC, 4),
+            'current_month_pkr', ROUND((hd.month_cost_usd * (SELECT rate FROM exchange))::NUMERIC, 2),
+            'last_30d_usd', ROUND(hd.last_30d_cost_usd::NUMERIC, 4),
+            'last_30d_pkr', ROUND((hd.last_30d_cost_usd * (SELECT rate FROM exchange))::NUMERIC, 2)
+          ),
+          'margin', json_build_object(
+            'monthly_margin_pkr', ROUND((COALESCE(hd.expected_monthly_amount, 0) - hd.month_cost_usd * (SELECT rate FROM exchange))::NUMERIC, 2),
+            'monthly_margin_usd', ROUND((COALESCE(hd.expected_monthly_amount, 0) / (SELECT rate FROM exchange) - hd.month_cost_usd)::NUMERIC, 2),
+            'margin_pct', CASE
+              WHEN COALESCE(hd.expected_monthly_amount, 0) > 0
+              THEN ROUND(((COALESCE(hd.expected_monthly_amount, 0) - hd.month_cost_usd * (SELECT rate FROM exchange)) / hd.expected_monthly_amount * 100)::NUMERIC, 1)
+              ELSE 0
+            END
+          ),
+          'usage', json_build_object(
+            'all_time_messages', hd.all_time_msgs_in + hd.all_time_msgs_out,
+            'all_time_tasks', hd.all_time_tasks,
+            'all_time_voice_notes', hd.all_time_voice_in + hd.all_time_voice_out,
+            'all_time_ai_calls', hd.all_time_ai_calls,
+            'all_time_stt_minutes', ROUND(hd.all_time_stt_minutes::NUMERIC, 2),
+            'all_time_tts_characters', hd.all_time_tts_characters,
+            'current_month_messages', hd.month_messages,
+            'current_month_tasks', hd.month_tasks,
+            'current_month_ai_calls', hd.month_ai_calls
+          ),
+          'cost_breakdown', json_build_object(
+            'twilio_usd', ROUND(hd.breakdown_twilio::NUMERIC, 4),
+            'stt_usd', ROUND(hd.breakdown_stt::NUMERIC, 4),
+            'tts_usd', ROUND(hd.breakdown_tts::NUMERIC, 4),
+            'ai_usd', ROUND(hd.breakdown_ai::NUMERIC, 4)
+          )
+        ) as row_data
+        FROM household_data hd
+      ) sub
+    ), '[]'::JSON),
+    'totals', json_build_object(
+      'total_households', (SELECT COUNT(*) FROM household_data),
+      'total_revenue_monthly_pkr', (SELECT COALESCE(SUM(expected_monthly_amount), 0) FROM household_data),
+      'total_revenue_monthly_usd', ROUND((SELECT COALESCE(SUM(expected_monthly_amount), 0) FROM household_data) / (SELECT rate FROM exchange), 2),
+      'total_cost_current_month_usd', ROUND((SELECT COALESCE(SUM(month_cost_usd), 0) FROM household_data)::NUMERIC, 4),
+      'total_cost_all_time_usd', ROUND((SELECT COALESCE(SUM(all_time_cost_usd), 0) FROM household_data)::NUMERIC, 4),
+      'total_margin_monthly_pkr', ROUND((
+        (SELECT COALESCE(SUM(expected_monthly_amount), 0) FROM household_data) -
+        (SELECT COALESCE(SUM(month_cost_usd), 0) FROM household_data) * (SELECT rate FROM exchange)
+      )::NUMERIC, 2)
+    )
+  ) INTO result;
+
+  RETURN result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION admin_cost_dashboard(TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION admin_cost_dashboard(TEXT) TO authenticated;
 
 -- ============================================
 -- PART 8: INITIAL DATA
@@ -439,7 +679,14 @@ INSERT INTO app_config (key, value, description) VALUES
   ('payment_easypaisa', '03XX-XXXXXXX', 'EasyPaisa account number for payments'),
   ('payment_bank_name', 'Bank Name', 'Bank name for transfers'),
   ('payment_bank_account', 'XXXX-XXXXXXXXXX', 'Bank account number'),
-  ('payment_bank_title', 'Account Title', 'Bank account title')
+  ('payment_bank_title', 'Account Title', 'Bank account title'),
+  -- Cost tracking rates (from migration 019)
+  ('cost_twilio_message_usd',      '0.005',    'Cost per Twilio WhatsApp message (inbound or outbound) in USD'),
+  ('cost_openai_stt_per_min_usd',  '0.006',    'Cost per minute of OpenAI Whisper STT in USD'),
+  ('cost_openai_tts_per_char_usd', '0.000015', 'Cost per character of OpenAI TTS in USD ($15/1M chars)'),
+  ('cost_openai_ai_call_usd',      '0.001',    'Estimated cost per OpenAI GPT-4o-mini AI call in USD'),
+  ('cost_exchange_rate_pkr_usd',   '278',      'Exchange rate: PKR per 1 USD'),
+  ('admin_dashboard_secret',       'HomeOpsCostDash2026!', 'Secret for admin cost dashboard access')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
 
 -- ============================================
@@ -463,7 +710,8 @@ COMMENT ON COLUMN households.cap_tasks_per_day IS 'Max tasks per day. Essential=
 COMMENT ON COLUMN households.cap_messages_per_month IS 'Max messages per month. Essential=10000, Pro=20000, Max=40000';
 COMMENT ON COLUMN households.cap_voice_notes_per_staff_month IS 'Max voice notes per staff per month. All plans=250';
 COMMENT ON TABLE usage_events IS 'Log of every billable action per household for usage tracking and cap enforcement';
-COMMENT ON TABLE usage_daily IS 'Aggregated daily usage counts per household (populated nightly by WF6)';
+COMMENT ON TABLE usage_daily IS 'Aggregated daily usage counts and costs per household (populated nightly by WF8)';
+COMMENT ON COLUMN usage_daily.estimated_cost_usd IS 'Estimated API cost in USD calculated from usage rates (Twilio + OpenAI)';
 COMMENT ON COLUMN households.subscription_status IS 'trial=new, active=paid, past_due=grace period, cancelled=user cancelled, expired=payment failed';
 COMMENT ON COLUMN pending_signups.members_json IS 'JSON array: [{"name": "...", "whatsapp": "...", "role": "member|staff"}]';
 COMMENT ON COLUMN pending_signups.status IS 'pending=form submitted, payment_started=redirected to payment, awaiting_payment=local payment pending, completed=household created, expired=timeout, cancelled=user cancelled';
@@ -473,9 +721,21 @@ COMMENT ON COLUMN pending_signups.payment_amount IS 'Payment amount in PKR based
 COMMENT ON COLUMN tasks.problem_notes IS 'Description of the problem reported by assignee';
 COMMENT ON COLUMN tasks.task_complexity IS 'simple = auto-complete on ack, complex = needs explicit done';
 COMMENT ON COLUMN tasks.reminder_count IS 'Number of reminders sent after due_at passed';
+COMMENT ON COLUMN staff.voice_payment_pending IS 'True when admin requested voice on Essential plan but payment not yet verified';
+COMMENT ON COLUMN staff.voice_payment_ref IS 'Payment reference number provided by admin';
+COMMENT ON COLUMN staff.voice_payment_proof_url IS 'URL of payment proof screenshot from Twilio MediaUrl';
+COMMENT ON COLUMN staff.voice_payment_requested_at IS 'When voice activation was requested';
 COMMENT ON FUNCTION is_whitelisted IS 'Check if a phone number is in the owner whitelist';
 COMMENT ON FUNCTION get_config IS 'Get a configuration value by key';
 COMMENT ON FUNCTION get_plan_price IS 'Get monthly price in PKR for a plan tier';
+COMMENT ON FUNCTION calculate_expected_amount IS 'Calculate expected monthly payment breakdown (base + extra people + voice add-ons)';
+COMMENT ON FUNCTION recalculate_and_store_expected_amount IS 'Calculate and persist expected_monthly_amount on households table';
+COMMENT ON COLUMN households.expected_monthly_amount IS 'Expected monthly payment including base plan + add-ons';
+COMMENT ON COLUMN payments.expected_amount IS 'Expected monthly amount at time of payment for audit trail';
+COMMENT ON COLUMN payments.payment_classification IS 'full=covers all, base_only=plan only, partial=incomplete, overpayment=exceeds expected';
+COMMENT ON COLUMN payments.addons_activated IS 'JSON record of add-ons activated by this payment';
+COMMENT ON COLUMN payments.proof_url IS 'URL of payment proof screenshot from WhatsApp MediaUrl';
+COMMENT ON FUNCTION admin_cost_dashboard IS 'Password-protected admin dashboard returning household cost/profitability data as JSON';
 
 -- ============================================
 -- VERIFICATION QUERIES (uncomment to test)

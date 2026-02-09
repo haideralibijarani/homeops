@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cost Dashboard - HomeOps</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
+              400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d',
+              800: '#166534', 900: '#14532d',
+            },
+            surface: { 50: '#fafafa', 100: '#f4f4f5', 200: '#e4e4e7', 300: '#d4d4d8' }
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    .slide-up { animation: slideUp 0.5s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .stagger-1 { animation-delay: 0.05s; animation-fill-mode: backwards; }
+    .stagger-2 { animation-delay: 0.1s; animation-fill-mode: backwards; }
+    .stagger-3 { animation-delay: 0.15s; animation-fill-mode: backwards; }
+    .stagger-4 { animation-delay: 0.2s; animation-fill-mode: backwards; }
+    .expand-row { display: none; }
+    .expand-row.open { display: table-row; }
+    .sort-header { cursor: pointer; user-select: none; }
+    .sort-header:hover { color: #16a34a; }
+    .sort-header .sort-icon { opacity: 0.3; transition: opacity 0.15s; }
+    .sort-header:hover .sort-icon, .sort-header.active .sort-icon { opacity: 1; }
+    .margin-pill { padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .margin-good { background: #dcfce7; color: #166534; }
+    .margin-ok { background: #fef9c3; color: #854d0e; }
+    .margin-bad { background: #fee2e2; color: #991b1b; }
+    .margin-zero { background: #f4f4f5; color: #71717a; }
+    tr.household-row { cursor: pointer; transition: background 0.1s; }
+    tr.household-row:hover { background: #f0fdf4; }
+    .login-input:focus { box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15); }
+    .grain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.02; z-index: 50;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+  </style>
+</head>
+<body class="bg-surface-50 min-h-screen">
+  <div class="grain"></div>
+
+  <!-- ==================== LOGIN GATE ==================== -->
+  <div id="loginGate" class="min-h-screen flex items-center justify-center px-4">
+    <div class="w-full max-w-sm fade-in">
+      <div class="text-center mb-8">
+        <div class="w-14 h-14 bg-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand-200">
+          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">HomeOps</h1>
+        <p class="text-sm text-gray-500 mt-1 font-medium">Cost & Profitability Dashboard</p>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Admin Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter dashboard password"
+          class="login-input w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:border-brand-500 outline-none transition mb-3"
+          onkeydown="if(event.key==='Enter')doLogin()">
+        <button onclick="doLogin()" id="loginBtn"
+          class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl transition text-sm flex items-center justify-center gap-2">
+          <span id="loginBtnText">Access Dashboard</span>
+          <svg id="loginSpinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+        <p id="loginError" class="hidden text-red-600 text-xs font-medium mt-3 text-center"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DASHBOARD ==================== -->
+  <div id="dashboard" class="hidden">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-brand-600 rounded-xl flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-base font-bold text-gray-900">HomeOps Costs</h1>
+            <p class="text-xs text-gray-500" id="headerTimestamp"></p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="refreshData()" class="px-3 py-1.5 text-xs font-medium text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Refresh
+          </button>
+          <button onclick="doLogout()" class="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+            Logout
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="summaryCards">
+        <!-- Card 1: Households -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 slide-up stagger-1">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+              </svg>
+            </div>
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Households</span>
+          </div>
+          <p class="text-2xl font-bold text-gray-900 font-mono" id="totalHouseholds">--</p>
+        </div>
+        <!-- Card 2: Revenue -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 slide-up stagger-2">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
+              <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Revenue/mo</span>
+          </div>
+          <p class="text-2xl font-bold text-gray-900 font-mono" id="totalRevenue">--</p>
+          <p class="text-xs text-gray-400 mt-1 font-mono" id="totalRevenueUsd"></p>
+        </div>
+        <!-- Card 3: Cost -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 slide-up stagger-3">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
+              <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+              </svg>
+            </div>
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Cost (month)</span>
+          </div>
+          <p class="text-2xl font-bold text-gray-900 font-mono" id="totalCost">--</p>
+          <p class="text-xs text-gray-400 mt-1 font-mono" id="totalCostPkr"></p>
+        </div>
+        <!-- Card 4: Margin -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 slide-up stagger-4">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Avg Margin</span>
+          </div>
+          <p class="text-2xl font-bold text-gray-900 font-mono" id="avgMargin">--</p>
+          <p class="text-xs text-gray-400 mt-1 font-mono" id="totalMarginPkr"></p>
+        </div>
+      </div>
+
+      <!-- Household Table -->
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden slide-up stagger-4 mb-6">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h2 class="text-sm font-bold text-gray-900">Household Profitability</h2>
+          <span class="text-xs text-gray-400 font-mono" id="tableCount"></span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wider">
+                <th class="sort-header px-5 py-3 text-left font-semibold" data-sort="name" onclick="sortTable('name')">
+                  Household <span class="sort-icon">&#9650;</span>
+                </th>
+                <th class="sort-header px-4 py-3 text-left font-semibold" data-sort="plan" onclick="sortTable('plan')">
+                  Plan <span class="sort-icon">&#9650;</span>
+                </th>
+                <th class="sort-header px-4 py-3 text-center font-semibold" data-sort="people" onclick="sortTable('people')">
+                  People <span class="sort-icon">&#9650;</span>
+                </th>
+                <th class="sort-header px-4 py-3 text-right font-semibold" data-sort="revenue" onclick="sortTable('revenue')">
+                  Revenue/mo <span class="sort-icon">&#9650;</span>
+                </th>
+                <th class="sort-header px-4 py-3 text-right font-semibold" data-sort="cost" onclick="sortTable('cost')">
+                  Cost (month) <span class="sort-icon">&#9650;</span>
+                </th>
+                <th class="sort-header px-4 py-3 text-right font-semibold" data-sort="margin_pkr" onclick="sortTable('margin_pkr')">
+                  Margin <span class="sort-icon">&#9650;</span>
+                </th>
+                <th class="sort-header active px-4 py-3 text-center font-semibold" data-sort="margin_pct" onclick="sortTable('margin_pct')">
+                  Margin % <span class="sort-icon">&#9660;</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="householdTableBody">
+              <tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cost Rates -->
+      <div class="bg-white rounded-xl border border-gray-200 p-5 slide-up mb-8">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Configurable Cost Rates</h3>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm" id="costRatesGrid">
+          <div>
+            <p class="text-gray-400 text-xs mb-1">Twilio / message</p>
+            <p class="font-mono font-semibold text-gray-900" id="rateTwilio">--</p>
+          </div>
+          <div>
+            <p class="text-gray-400 text-xs mb-1">STT / minute</p>
+            <p class="font-mono font-semibold text-gray-900" id="rateStt">--</p>
+          </div>
+          <div>
+            <p class="text-gray-400 text-xs mb-1">TTS / character</p>
+            <p class="font-mono font-semibold text-gray-900" id="rateTts">--</p>
+          </div>
+          <div>
+            <p class="text-gray-400 text-xs mb-1">AI / call</p>
+            <p class="font-mono font-semibold text-gray-900" id="rateAi">--</p>
+          </div>
+          <div>
+            <p class="text-gray-400 text-xs mb-1">Exchange Rate</p>
+            <p class="font-mono font-semibold text-gray-900" id="rateExchange">--</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="border-t border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 text-center text-xs text-gray-400">
+        HomeOps Admin Dashboard &middot; Data from <code class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">admin_cost_dashboard()</code> via Supabase RPC
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    const SUPABASE_URL = 'https://jljwhvuevsewipqqkkct.supabase.co';
+    // IMPORTANT: Replace with your Supabase anon key from Settings > API
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsandodnVldnNld2lwcXFra2N0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5MjY4ODcsImV4cCI6MjA4NDUwMjg4N30.GoZmgMXWkUdSkHLW6Rn2hGNpt6GEFWzsi5C8_90E7hc';
+
+    // ============================================
+    // STATE
+    // ============================================
+    let dashboardData = null;
+    let currentSort = { key: 'margin_pct', dir: 'desc' };
+
+    // ============================================
+    // LOGIN
+    // ============================================
+    function initApp() {
+      const saved = sessionStorage.getItem('homeops_admin_secret');
+      if (saved) {
+        loadDashboard(saved);
+      }
+    }
+
+    async function doLogin() {
+      const password = document.getElementById('loginPassword').value.trim();
+      if (!password) return;
+
+      setLoginLoading(true);
+      hideLoginError();
+
+      try {
+        const data = await callDashboardRpc(password);
+        if (data.error) {
+          showLoginError('Invalid password. Please try again.');
+          setLoginLoading(false);
+          return;
+        }
+        sessionStorage.setItem('homeops_admin_secret', password);
+        dashboardData = data;
+        showDashboard();
+      } catch (e) {
+        showLoginError('Connection failed. Check your Supabase configuration.');
+        setLoginLoading(false);
+      }
+    }
+
+    function doLogout() {
+      sessionStorage.removeItem('homeops_admin_secret');
+      dashboardData = null;
+      document.getElementById('loginGate').classList.remove('hidden');
+      document.getElementById('dashboard').classList.add('hidden');
+      document.getElementById('loginPassword').value = '';
+    }
+
+    async function refreshData() {
+      const secret = sessionStorage.getItem('homeops_admin_secret');
+      if (!secret) return;
+      await loadDashboard(secret);
+    }
+
+    async function loadDashboard(secret) {
+      try {
+        const data = await callDashboardRpc(secret);
+        if (data.error) {
+          doLogout();
+          return;
+        }
+        dashboardData = data;
+        showDashboard();
+      } catch (e) {
+        console.error('Dashboard load failed:', e);
+      }
+    }
+
+    async function callDashboardRpc(secret) {
+      const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_cost_dashboard`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ admin_secret: secret })
+      });
+      return await resp.json();
+    }
+
+    function setLoginLoading(loading) {
+      document.getElementById('loginBtn').disabled = loading;
+      document.getElementById('loginBtnText').textContent = loading ? 'Checking...' : 'Access Dashboard';
+      document.getElementById('loginSpinner').classList.toggle('hidden', !loading);
+    }
+
+    function showLoginError(msg) {
+      const el = document.getElementById('loginError');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+
+    function hideLoginError() {
+      document.getElementById('loginError').classList.add('hidden');
+    }
+
+    // ============================================
+    // RENDER DASHBOARD
+    // ============================================
+    function showDashboard() {
+      document.getElementById('loginGate').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      renderData();
+    }
+
+    function renderData() {
+      if (!dashboardData || !dashboardData.success) return;
+      const d = dashboardData;
+      const t = d.totals;
+      const rate = d.exchange_rate;
+      const households = d.households || [];
+
+      // Timestamp
+      document.getElementById('headerTimestamp').textContent =
+        'Updated ' + new Date(d.generated_at).toLocaleString();
+
+      // Summary cards
+      document.getElementById('totalHouseholds').textContent = t.total_households;
+
+      document.getElementById('totalRevenue').textContent =
+        'PKR ' + Number(t.total_revenue_monthly_pkr).toLocaleString();
+      document.getElementById('totalRevenueUsd').textContent =
+        '$' + Number(t.total_revenue_monthly_usd).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+      document.getElementById('totalCost').textContent =
+        '$' + Number(t.total_cost_current_month_usd).toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4});
+      const costPkr = Number(t.total_cost_current_month_usd) * rate;
+      document.getElementById('totalCostPkr').textContent =
+        'PKR ' + costPkr.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+
+      // Average margin
+      const margins = households
+        .filter(h => h.revenue && h.revenue.monthly_pkr > 0)
+        .map(h => Number(h.margin?.margin_pct || 0));
+      const avgMargin = margins.length > 0
+        ? (margins.reduce((a, b) => a + b, 0) / margins.length).toFixed(1)
+        : '0.0';
+      document.getElementById('avgMargin').textContent = avgMargin + '%';
+      document.getElementById('totalMarginPkr').textContent =
+        'PKR ' + Number(t.total_margin_monthly_pkr).toLocaleString(undefined, {maximumFractionDigits: 0});
+
+      // Cost rates
+      if (d.cost_rates) {
+        document.getElementById('rateTwilio').textContent = '$' + Number(d.cost_rates.twilio_message).toFixed(4);
+        document.getElementById('rateStt').textContent = '$' + Number(d.cost_rates.stt_per_minute).toFixed(4);
+        document.getElementById('rateTts').textContent = '$' + Number(d.cost_rates.tts_per_character).toFixed(6);
+        document.getElementById('rateAi').textContent = '$' + Number(d.cost_rates.ai_call).toFixed(4);
+      }
+      document.getElementById('rateExchange').textContent = rate + ' PKR/USD';
+
+      // Table
+      document.getElementById('tableCount').textContent = households.length + ' households';
+      renderTable(households);
+    }
+
+    function renderTable(households) {
+      const sorted = sortHouseholds(households);
+      const rate = dashboardData.exchange_rate;
+      const tbody = document.getElementById('householdTableBody');
+
+      if (sorted.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">No household data yet. Run migration 019 and trigger WF8.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = sorted.map((h, i) => {
+        const revenue = Number(h.revenue?.monthly_pkr || 0);
+        const costMonth = Number(h.costs?.current_month_usd || 0);
+        const costMonthPkr = Number(h.costs?.current_month_pkr || 0);
+        const marginPkr = Number(h.margin?.monthly_margin_pkr || 0);
+        const marginPct = Number(h.margin?.margin_pct || 0);
+        const people = (Number(h.member_count) || 0) + (Number(h.staff_count) || 0);
+
+        const marginClass = revenue === 0 ? 'margin-zero'
+          : marginPct >= 70 ? 'margin-good'
+          : marginPct >= 40 ? 'margin-ok'
+          : 'margin-bad';
+
+        const statusDot = h.subscription_status === 'active'
+          ? '<span class="w-1.5 h-1.5 bg-green-500 rounded-full inline-block mr-1"></span>'
+          : h.subscription_status === 'trial'
+          ? '<span class="w-1.5 h-1.5 bg-amber-400 rounded-full inline-block mr-1"></span>'
+          : '<span class="w-1.5 h-1.5 bg-gray-300 rounded-full inline-block mr-1"></span>';
+
+        const planLabel = (h.plan_tier || 'n/a').charAt(0).toUpperCase() + (h.plan_tier || 'n/a').slice(1);
+
+        // Expanded details
+        const usage = h.usage || {};
+        const breakdown = h.cost_breakdown || {};
+        const costsAll = h.costs || {};
+
+        return `
+          <tr class="household-row border-b border-gray-50" onclick="toggleExpand(${i})">
+            <td class="px-5 py-3.5 font-medium text-gray-900">
+              ${statusDot}${h.name || 'Unknown'}
+            </td>
+            <td class="px-4 py-3.5 text-gray-600">${planLabel}</td>
+            <td class="px-4 py-3.5 text-center text-gray-600 font-mono text-xs">
+              ${h.member_count || 0}m + ${h.staff_count || 0}s
+              ${h.voice_staff_count > 0 ? '<span class="text-brand-500" title="Voice-enabled staff">&#9835;' + h.voice_staff_count + '</span>' : ''}
+            </td>
+            <td class="px-4 py-3.5 text-right font-mono text-xs text-gray-900">PKR ${revenue.toLocaleString()}</td>
+            <td class="px-4 py-3.5 text-right font-mono text-xs text-gray-900">$${costMonth.toFixed(4)}</td>
+            <td class="px-4 py-3.5 text-right font-mono text-xs text-gray-900">PKR ${marginPkr.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+            <td class="px-4 py-3.5 text-center">
+              <span class="margin-pill ${marginClass}">${marginPct.toFixed(1)}%</span>
+            </td>
+          </tr>
+          <tr class="expand-row" id="expand-${i}">
+            <td colspan="7" class="px-5 py-4 bg-gray-50 border-b border-gray-100">
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-xs">
+                <div>
+                  <p class="font-semibold text-gray-500 uppercase tracking-wider mb-2">Cost Breakdown (All-Time)</p>
+                  <div class="space-y-1 font-mono">
+                    <div class="flex justify-between"><span class="text-gray-500">Twilio</span><span>$${Number(breakdown.twilio_usd || 0).toFixed(4)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">STT</span><span>$${Number(breakdown.stt_usd || 0).toFixed(4)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">TTS</span><span>$${Number(breakdown.tts_usd || 0).toFixed(4)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">AI</span><span>$${Number(breakdown.ai_usd || 0).toFixed(4)}</span></div>
+                    <div class="flex justify-between border-t border-gray-200 pt-1 font-semibold">
+                      <span>All-Time</span><span>$${Number(costsAll.all_time_usd || 0).toFixed(4)}</span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <p class="font-semibold text-gray-500 uppercase tracking-wider mb-2">Cost Windows</p>
+                  <div class="space-y-1 font-mono">
+                    <div class="flex justify-between"><span class="text-gray-500">This Month</span><span>$${Number(costsAll.current_month_usd || 0).toFixed(4)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Last 30 Days</span><span>$${Number(costsAll.last_30d_usd || 0).toFixed(4)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">All-Time PKR</span><span>PKR ${Number(costsAll.all_time_pkr || 0).toLocaleString(undefined, {maximumFractionDigits: 0})}</span></div>
+                  </div>
+                </div>
+                <div>
+                  <p class="font-semibold text-gray-500 uppercase tracking-wider mb-2">Usage (All-Time)</p>
+                  <div class="space-y-1 font-mono">
+                    <div class="flex justify-between"><span class="text-gray-500">Messages</span><span>${Number(usage.all_time_messages || 0).toLocaleString()}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Tasks</span><span>${Number(usage.all_time_tasks || 0).toLocaleString()}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Voice Notes</span><span>${Number(usage.all_time_voice_notes || 0).toLocaleString()}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">AI Calls</span><span>${Number(usage.all_time_ai_calls || 0).toLocaleString()}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">STT Minutes</span><span>${Number(usage.all_time_stt_minutes || 0).toFixed(1)}</span></div>
+                  </div>
+                </div>
+                <div>
+                  <p class="font-semibold text-gray-500 uppercase tracking-wider mb-2">Usage (This Month)</p>
+                  <div class="space-y-1 font-mono">
+                    <div class="flex justify-between"><span class="text-gray-500">Messages</span><span>${Number(usage.current_month_messages || 0).toLocaleString()}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Tasks</span><span>${Number(usage.current_month_tasks || 0).toLocaleString()}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">AI Calls</span><span>${Number(usage.current_month_ai_calls || 0).toLocaleString()}</span></div>
+                  </div>
+                  <p class="font-semibold text-gray-500 uppercase tracking-wider mt-3 mb-2">Info</p>
+                  <div class="space-y-1 text-gray-600">
+                    <div>Status: <span class="font-medium">${h.subscription_status || 'n/a'}</span></div>
+                    <div>Since: <span class="font-medium font-mono">${h.subscribed_at ? new Date(h.subscribed_at).toLocaleDateString() : h.created_at ? new Date(h.created_at).toLocaleDateString() : 'n/a'}</span></div>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    // ============================================
+    // SORTING
+    // ============================================
+    function sortTable(key) {
+      if (currentSort.key === key) {
+        currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort = { key, dir: 'desc' };
+      }
+
+      // Update header visuals
+      document.querySelectorAll('.sort-header').forEach(th => {
+        th.classList.remove('active');
+        th.querySelector('.sort-icon').innerHTML = '&#9650;';
+      });
+      const activeHeader = document.querySelector(`.sort-header[data-sort="${key}"]`);
+      if (activeHeader) {
+        activeHeader.classList.add('active');
+        activeHeader.querySelector('.sort-icon').innerHTML = currentSort.dir === 'asc' ? '&#9650;' : '&#9660;';
+      }
+
+      renderTable(dashboardData.households || []);
+    }
+
+    function sortHouseholds(households) {
+      const { key, dir } = currentSort;
+      const mult = dir === 'asc' ? 1 : -1;
+
+      return [...households].sort((a, b) => {
+        let av, bv;
+        switch (key) {
+          case 'name': av = (a.name || '').toLowerCase(); bv = (b.name || '').toLowerCase();
+            return av < bv ? -1 * mult : av > bv ? 1 * mult : 0;
+          case 'plan': av = a.plan_tier || ''; bv = b.plan_tier || '';
+            return av < bv ? -1 * mult : av > bv ? 1 * mult : 0;
+          case 'people': av = (a.member_count || 0) + (a.staff_count || 0); bv = (b.member_count || 0) + (b.staff_count || 0);
+            return (av - bv) * mult;
+          case 'revenue': av = Number(a.revenue?.monthly_pkr || 0); bv = Number(b.revenue?.monthly_pkr || 0);
+            return (av - bv) * mult;
+          case 'cost': av = Number(a.costs?.current_month_usd || 0); bv = Number(b.costs?.current_month_usd || 0);
+            return (av - bv) * mult;
+          case 'margin_pkr': av = Number(a.margin?.monthly_margin_pkr || 0); bv = Number(b.margin?.monthly_margin_pkr || 0);
+            return (av - bv) * mult;
+          case 'margin_pct': av = Number(a.margin?.margin_pct || 0); bv = Number(b.margin?.margin_pct || 0);
+            return (av - bv) * mult;
+          default: return 0;
+        }
+      });
+    }
+
+    function toggleExpand(index) {
+      const row = document.getElementById('expand-' + index);
+      if (row) row.classList.toggle('open');
+    }
+
+    // ============================================
+    // INIT
+    // ============================================
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
