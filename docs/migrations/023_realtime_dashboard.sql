@@ -58,6 +58,10 @@ BEGIN
       h.id, h.name, h.plan_tier, h.subscription_status, h.expected_monthly_amount,
       h.subscribed_at, h.created_at, h.city, h.country,
       h.cap_voice_notes_per_month, h.cap_tasks_per_month, h.cap_messages_per_month,
+      -- Months active (for estimated all-time revenue)
+      GREATEST(1, CEIL(EXTRACT(EPOCH FROM (NOW() - COALESCE(h.subscribed_at, h.created_at))) / 2592000.0)) as months_active,
+      COALESCE(h.expected_monthly_amount, 0) *
+        GREATEST(1, CEIL(EXTRACT(EPOCH FROM (NOW() - COALESCE(h.subscribed_at, h.created_at))) / 2592000.0)) as estimated_revenue_all_time,
       (SELECT COUNT(*) FROM members m WHERE m.household_id = h.id) as member_count,
       (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id) as staff_count,
       (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id AND s.voice_notes_enabled = true) as voice_staff_count,
@@ -130,7 +134,10 @@ BEGIN
           'subscribed_at', hd.subscribed_at, 'created_at', hd.created_at,
           'revenue', json_build_object(
             'monthly_pkr', COALESCE(hd.expected_monthly_amount, 0),
-            'monthly_usd', ROUND(COALESCE(hd.expected_monthly_amount, 0) / (SELECT rate FROM exchange), 2)
+            'monthly_usd', ROUND(COALESCE(hd.expected_monthly_amount, 0) / (SELECT rate FROM exchange), 2),
+            'all_time_pkr', hd.estimated_revenue_all_time,
+            'all_time_usd', ROUND(hd.estimated_revenue_all_time / (SELECT rate FROM exchange), 2),
+            'months_active', hd.months_active
           ),
           'costs', json_build_object(
             'all_time_usd', ROUND(hd.all_time_cost_usd::NUMERIC, 4),
@@ -182,6 +189,13 @@ BEGIN
       'total_revenue_monthly_usd', ROUND((SELECT COALESCE(SUM(expected_monthly_amount), 0) FROM household_data) / (SELECT rate FROM exchange), 2),
       'total_cost_current_month_usd', ROUND((SELECT COALESCE(SUM(month_cost_usd), 0) FROM household_data)::NUMERIC, 4),
       'total_cost_all_time_usd', ROUND((SELECT COALESCE(SUM(all_time_cost_usd), 0) FROM household_data)::NUMERIC, 4),
+      'total_cost_all_time_pkr', ROUND((SELECT COALESCE(SUM(all_time_cost_usd), 0) FROM household_data)::NUMERIC * (SELECT rate FROM exchange), 2),
+      'total_revenue_all_time_pkr', (SELECT COALESCE(SUM(estimated_revenue_all_time), 0) FROM household_data),
+      'total_revenue_all_time_usd', ROUND((SELECT COALESCE(SUM(estimated_revenue_all_time), 0) FROM household_data) / (SELECT rate FROM exchange), 2),
+      'total_profit_all_time_pkr', ROUND((
+        (SELECT COALESCE(SUM(estimated_revenue_all_time), 0) FROM household_data) -
+        (SELECT COALESCE(SUM(all_time_cost_usd), 0) FROM household_data) * (SELECT rate FROM exchange)
+      )::NUMERIC, 2),
       'total_margin_monthly_pkr', ROUND((
         (SELECT COALESCE(SUM(expected_monthly_amount), 0) FROM household_data) -
         (SELECT COALESCE(SUM(month_cost_usd), 0) FROM household_data) * (SELECT rate FROM exchange)

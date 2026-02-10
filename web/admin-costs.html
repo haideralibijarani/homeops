@@ -180,6 +180,22 @@
         </div>
       </div>
 
+      <!-- All-Time Summary -->
+      <div class="grid grid-cols-3 gap-4 mb-6" id="allTimeCards">
+        <div class="bg-white rounded-xl border border-gray-200 p-4 slide-up stagger-2">
+          <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">All-Time Revenue (est.)</span>
+          <p class="text-lg font-bold text-gray-900 font-mono mt-1" id="allTimeRevenue">--</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4 slide-up stagger-3">
+          <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">All-Time Cost</span>
+          <p class="text-lg font-bold text-gray-900 font-mono mt-1" id="allTimeCost">--</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4 slide-up stagger-4">
+          <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">All-Time Profit</span>
+          <p class="text-lg font-bold font-mono mt-1" id="allTimeProfit">--</p>
+        </div>
+      </div>
+
       <!-- Household Table -->
       <div class="bg-white rounded-xl border border-gray-200 overflow-hidden slide-up stagger-4 mb-6">
         <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -444,6 +460,19 @@
       document.getElementById('totalMarginPkr').textContent =
         fmtMoney(t.total_margin_monthly_pkr / rate, t.total_margin_monthly_pkr, {decimals: currentCurrency === 'usd' ? 2 : 0});
 
+      // All-time cards
+      document.getElementById('allTimeRevenue').textContent =
+        fmtMoney(t.total_revenue_all_time_usd, t.total_revenue_all_time_pkr, {decimals: currentCurrency === 'usd' ? 2 : 0});
+      const allTimeCostPkr = Number(t.total_cost_all_time_usd) * rate;
+      document.getElementById('allTimeCost').textContent =
+        fmtMoney(t.total_cost_all_time_usd, t.total_cost_all_time_pkr || allTimeCostPkr, {decimals: currentCurrency === 'usd' ? 2 : 0});
+      const profitPkr = Number(t.total_profit_all_time_pkr || 0);
+      const profitUsd = profitPkr / rate;
+      const profitEl = document.getElementById('allTimeProfit');
+      profitEl.textContent = fmtMoney(profitUsd, profitPkr, {decimals: currentCurrency === 'usd' ? 2 : 0});
+      profitEl.className = profitEl.className.replace(/text-(emerald|red|gray)-\d+/g, '');
+      profitEl.classList.add(profitPkr > 0 ? 'text-emerald-600' : profitPkr < 0 ? 'text-red-600' : 'text-gray-900');
+
       // Cost rates
       if (d.cost_rates) {
         document.getElementById('rateTwilio').textContent = fmtRate(d.cost_rates.twilio_message);
@@ -530,11 +559,20 @@
                   </div>
                 </div>
                 <div>
-                  <p class="font-semibold text-gray-500 uppercase tracking-wider mb-2">Cost Windows</p>
+                  <p class="font-semibold text-gray-500 uppercase tracking-wider mb-2">Revenue & Cost</p>
                   <div class="space-y-1 font-mono">
-                    <div class="flex justify-between"><span class="text-gray-500">This Month</span><span>${fmtMoney(costsAll.current_month_usd, costsAll.current_month_pkr)}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Last 30 Days</span><span>${fmtMoney(costsAll.last_30d_usd, costsAll.last_30d_pkr)}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">All-Time</span><span>${fmtMoney(costsAll.all_time_usd, costsAll.all_time_pkr)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Revenue (est.)</span><span>${fmtMoney(h.revenue?.all_time_usd, h.revenue?.all_time_pkr, {decimals: currentCurrency === 'usd' ? 2 : 0})}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Cost All-Time</span><span>${fmtMoney(costsAll.all_time_usd, costsAll.all_time_pkr)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Cost This Month</span><span>${fmtMoney(costsAll.current_month_usd, costsAll.current_month_pkr)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Cost Last 30d</span><span>${fmtMoney(costsAll.last_30d_usd, costsAll.last_30d_pkr)}</span></div>
+                    <div class="flex justify-between border-t border-gray-200 pt-1 font-semibold">
+                      <span>Profit</span><span class="${Number(h.revenue?.all_time_pkr || 0) - Number(costsAll.all_time_pkr || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}">${(() => {
+                        const profU = Number(h.revenue?.all_time_usd || 0) - Number(costsAll.all_time_usd || 0);
+                        const profP = Number(h.revenue?.all_time_pkr || 0) - Number(costsAll.all_time_pkr || 0);
+                        return fmtMoney(profU, profP, {decimals: currentCurrency === 'usd' ? 2 : 0});
+                      })()}</span>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-gray-400"><span>Active</span><span>${h.revenue?.months_active || '?'} months</span></div>
                   </div>
                 </div>
                 <div>
