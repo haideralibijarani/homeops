@@ -238,20 +238,15 @@
                 5,000 messages/mo
               </li>
               <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-gray-300 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-                <span class="text-gray-400">Voice notes not included</span>
-              </li>
-              <li class="flex items-start gap-2">
                 <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
                 Daily text digest
               </li>
             </ul>
-            <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-400">
-              +PKR 7,000/staff for voice add-on
+            <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500 space-y-1">
+              <p class="font-medium text-gray-600">Voice notes: +PKR 7,000/staff/mo add-on</p>
+              <p>1,200 voice notes/mo pool shared across staff. E.g. 2 staff with voice = 600 each on average.</p>
             </div>
           </div>
 
@@ -293,7 +288,7 @@
                 <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
-                Voice notes for all staff
+                2,500 voice notes/mo (included)
               </li>
               <li class="flex items-start gap-2">
                 <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -302,8 +297,8 @@
                 Daily text digest
               </li>
             </ul>
-            <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-400">
-              Voice notes included for all staff
+            <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+              Voice pool shared across all staff
             </div>
           </div>
 
@@ -342,7 +337,7 @@
                 <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
-                Voice notes for all staff
+                6,000 voice notes/mo (included)
               </li>
               <li class="flex items-start gap-2">
                 <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -351,19 +346,24 @@
                 Daily text digest
               </li>
             </ul>
-            <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-400">
-              Voice notes included for all staff
+            <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+              Voice pool shared across all staff
             </div>
           </div>
         </div>
 
-        <!-- Add-ons info -->
-        <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 mb-4">
-          <p class="text-sm font-medium text-gray-700 mb-2">Add-ons (all plans)</p>
+        <!-- Add-ons & voice note info -->
+        <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 mb-3">
+          <p class="text-sm font-medium text-gray-700 mb-2">Add-ons</p>
           <div class="flex flex-col sm:flex-row sm:gap-6 gap-1 text-sm text-gray-500">
-            <span>Extra people beyond plan limit: <strong class="text-gray-700">+PKR 5,000/person/mo</strong></span>
-            <span id="voiceAddonInfo">Voice add-on (Essential only): <strong class="text-gray-700">+PKR 7,000/staff/mo</strong></span>
+            <span>Extra people: <strong class="text-gray-700">+PKR 5,000/person/mo</strong></span>
+            <span id="voiceAddonInfo">Voice add-on (Essential): <strong class="text-gray-700">+PKR 7,000/staff/mo</strong></span>
           </div>
+        </div>
+
+        <div class="bg-blue-50 rounded-lg p-4 border border-blue-100 mb-4">
+          <p class="text-sm font-medium text-gray-700 mb-1">How voice notes work</p>
+          <p class="text-xs text-gray-600">Only voice notes <strong>sent by HomeOps to staff</strong> count toward your pool. Voice notes <strong>you send to HomeOps</strong> (commands, task updates) are free and unlimited.</p>
         </div>
 
         <p class="text-center text-xs text-gray-400">Cancel anytime. No contracts.</p>
@@ -782,8 +782,11 @@
       document.getElementById('pricingTotal').textContent = `PKR ${monthlyTotal.toLocaleString()}`;
 
       // Limits footer
+      const voiceLimit = plan.voice_included
+        ? ` \u00b7 ${plan.voice_pool.toLocaleString()} voice notes/mo`
+        : (voiceStaffCount > 0 ? ` \u00b7 ${plan.voice_pool.toLocaleString()} voice notes/mo (add-on)` : '');
       document.getElementById('pricingLimits').textContent =
-        `Limits: ${plan.tasks_per_month.toLocaleString()} tasks/mo \u00b7 ${plan.messages_per_month.toLocaleString()} messages/mo`;
+        `Limits: ${plan.tasks_per_month.toLocaleString()} tasks/mo \u00b7 ${plan.messages_per_month.toLocaleString()} messages/mo${voiceLimit}`;
     }
 
     function addMember() {
