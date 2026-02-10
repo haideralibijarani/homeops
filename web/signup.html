@@ -795,6 +795,7 @@
         id: memberId,
         name: '',
         whatsapp: '',
+        nicknames: '',
         role: 'member',
         title: '',
         voice_notes_enabled: false,
@@ -835,6 +836,10 @@
               <input type="tel" class="member-whatsapp w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
                 placeholder="WhatsApp (+92...)" data-member-id="${memberId}">
             </div>
+            <div>
+              <input type="text" class="member-nicknames w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
+                placeholder="Nicknames (optional, e.g. Babu, Bashu)" data-member-id="${memberId}">
+            </div>
             <div class="member-title-container hidden" data-member-id="${memberId}">
               <select class="member-title w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white"
                 data-member-id="${memberId}">
@@ -871,6 +876,11 @@
       memberEl.querySelector('.member-whatsapp').addEventListener('input', (e) => {
         const m = members.find(m => m.id === memberId);
         if (m) m.whatsapp = e.target.value;
+      });
+
+      memberEl.querySelector('.member-nicknames').addEventListener('input', (e) => {
+        const m = members.find(m => m.id === memberId);
+        if (m) m.nicknames = e.target.value;
       });
 
       // Title dropdown event listener
@@ -1082,6 +1092,7 @@
           return {
             name: m.name.trim(),
             whatsapp: normalizePhone(m.whatsapp),
+            nicknames: m.nicknames.trim() || null,
             role: m.role,
             title: isStaff ? (m.title || null) : null,
             voice_notes_enabled: voiceEnabled,
