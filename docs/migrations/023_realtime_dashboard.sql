@@ -250,10 +250,17 @@ BEGIN
   WITH exchange AS (
     SELECT COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_exchange_rate_pkr_usd'), '')::DECIMAL, 278) as rate
   ),
+  cost_rates AS (
+    SELECT
+      COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_twilio_message_usd'), '')::DECIMAL, 0.005) as twilio_msg,
+      COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_openai_stt_per_min_usd'), '')::DECIMAL, 0.006) as stt_min,
+      COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_openai_tts_per_char_usd'), '')::DECIMAL, 0.000015) as tts_char,
+      COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_openai_ai_call_usd'), '')::DECIMAL, 0.001) as ai_call
+  ),
   -- Historical days from usage_daily
   daily_rows AS (
     SELECT
-      ud.household_id, h.name as household_name,
+      ud.household_id, h.name as household_name, h.city, h.country,
       ud.date, ud.messages_inbound, ud.messages_outbound,
       ud.tasks_created, ud.voice_notes_inbound, ud.voice_notes_outbound,
       ud.ai_calls, ud.stt_minutes, ud.tts_characters, ud.estimated_cost_usd
@@ -266,7 +273,7 @@ BEGIN
   -- Today's real-time events (not yet in usage_daily)
   today_rows AS (
     SELECT
-      ue.household_id, h.name as household_name,
+      ue.household_id, h.name as household_name, h.city, h.country,
       pkt_today as date,
       COUNT(*) FILTER (WHERE event_type = 'message_inbound') as messages_inbound,
       COUNT(*) FILTER (WHERE event_type = 'message_outbound') as messages_outbound,
@@ -276,12 +283,18 @@ BEGIN
       COUNT(*) FILTER (WHERE event_type IN ('ai_classification', 'ai_call')) as ai_calls,
       COALESCE(SUM(COALESCE((details->>'duration_seconds')::DECIMAL, 0) / 60.0) FILTER (WHERE event_type = 'stt_transcription'), 0) as stt_minutes,
       COALESCE(SUM(COALESCE((details->>'character_count')::INTEGER, 0)) FILTER (WHERE event_type = 'tts_generation'), 0) as tts_characters,
-      0::DECIMAL as estimated_cost_usd  -- calculated below
+      -- Calculate cost from event counts and cost rates
+      (
+        (COUNT(*) FILTER (WHERE event_type IN ('message_inbound', 'message_outbound', 'voice_note_inbound', 'voice_note_outbound'))) * (SELECT twilio_msg FROM cost_rates) +
+        COALESCE(SUM(COALESCE((details->>'duration_seconds')::DECIMAL, 0) / 60.0) FILTER (WHERE event_type = 'stt_transcription'), 0) * (SELECT stt_min FROM cost_rates) +
+        COALESCE(SUM(COALESCE((details->>'character_count')::INTEGER, 0)) FILTER (WHERE event_type = 'tts_generation'), 0) * (SELECT tts_char FROM cost_rates) +
+        COUNT(*) FILTER (WHERE event_type IN ('ai_classification', 'ai_call')) * (SELECT ai_call FROM cost_rates)
+      ) as estimated_cost_usd
     FROM usage_events ue
     JOIN households h ON h.id = ue.household_id
     WHERE ue.created_at >= pkt_today_start
       AND (p_household_id IS NULL OR ue.household_id = p_household_id)
-    GROUP BY ue.household_id, h.name
+    GROUP BY ue.household_id, h.name, h.city, h.country
   ),
   all_rows AS (
     SELECT * FROM daily_rows
@@ -298,6 +311,8 @@ BEGIN
       SELECT json_agg(json_build_object(
         'household_id', r.household_id,
         'household_name', r.household_name,
+        'city', r.city,
+        'country', r.country,
         'date', r.date,
         'messages_in', r.messages_inbound,
         'messages_out', r.messages_outbound,

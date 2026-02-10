@@ -257,6 +257,9 @@
             <select id="dailyHousehold" onchange="loadDailyUsage()" class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 font-medium">
               <option value="">All Households</option>
             </select>
+            <select id="dailyLocation" onchange="applyDailyLocationFilter()" class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 font-medium">
+              <option value="">All Locations</option>
+            </select>
             <div class="flex gap-1">
               <button onclick="setDailyPeriod('month')" class="daily-period-btn active text-xs px-3 py-1.5 rounded-lg font-medium transition" data-period="month">This Month</button>
               <button onclick="setDailyPeriod('30d')" class="daily-period-btn text-xs px-3 py-1.5 rounded-lg font-medium transition" data-period="30d">Last 30 Days</button>
@@ -344,6 +347,7 @@
       currentCurrency = currentCurrency === 'pkr' ? 'usd' : 'pkr';
       document.getElementById('currencyToggle').textContent = currentCurrency.toUpperCase();
       renderData();
+      if (lastDailyData) renderDailyUsage(lastDailyData);
     }
 
     function fmtMoney(usd, pkr, opts = {}) {
@@ -719,6 +723,8 @@
     let dailyPeriod = 'month';
     let dailyOpen = false;
     let dailyLoaded = false;
+    let lastDailyData = null;
+    let dailyLocationFilter = '';
 
     function toggleDailyUsage() {
       dailyOpen = !dailyOpen;
@@ -761,17 +767,22 @@
           return;
         }
         dailyLoaded = true;
+        lastDailyData = data;
         renderDailyUsage(data);
       } catch (e) {
         tbody.innerHTML = '<tr><td colspan="9" class="px-5 py-8 text-center text-red-500">Failed to load: ' + e.message + '</td></tr>';
       }
     }
 
+    function applyDailyLocationFilter() {
+      dailyLocationFilter = document.getElementById('dailyLocation').value;
+      if (lastDailyData) renderDailyUsage(lastDailyData);
+    }
+
     function renderDailyUsage(data) {
-      const rows = data.rows || [];
+      const allRows = data.rows || [];
       const rate = data.exchange_rate || 278;
       const tbody = document.getElementById('dailyTableBody');
-      document.getElementById('dailyRowCount').textContent = rows.length + ' rows';
 
       // Populate household dropdown if not yet done
       const select = document.getElementById('dailyHousehold');
@@ -783,6 +794,32 @@
           select.appendChild(opt);
         }
       }
+
+      // Populate location dropdown from row data
+      const locSelect = document.getElementById('dailyLocation');
+      if (locSelect.options.length <= 1 && allRows.length > 0) {
+        const locations = new Set();
+        for (const r of allRows) {
+          const loc = [r.city, r.country].filter(Boolean).join(', ');
+          if (loc) locations.add(loc);
+        }
+        for (const loc of [...locations].sort()) {
+          const opt = document.createElement('option');
+          opt.value = loc;
+          opt.textContent = loc;
+          locSelect.appendChild(opt);
+        }
+      }
+
+      // Apply location filter
+      const rows = dailyLocationFilter
+        ? allRows.filter(r => {
+            const loc = [r.city, r.country].filter(Boolean).join(', ');
+            return loc === dailyLocationFilter;
+          })
+        : allRows;
+
+      document.getElementById('dailyRowCount').textContent = rows.length + ' rows';
 
       if (rows.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9" class="px-5 py-8 text-center text-gray-400">No usage data for this period</td></tr>';
