@@ -229,13 +229,13 @@
                 <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
-                30 tasks/day
+                500 tasks/mo
               </li>
               <li class="flex items-start gap-2">
                 <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
-                10,000 messages/mo
+                5,000 messages/mo
               </li>
               <li class="flex items-start gap-2">
                 <svg class="w-4 h-4 text-gray-300 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -281,13 +281,13 @@
                 <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
-                50 tasks/day
+                1,000 tasks/mo
               </li>
               <li class="flex items-start gap-2">
                 <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
-                20,000 messages/mo
+                12,000 messages/mo
               </li>
               <li class="flex items-start gap-2">
                 <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -330,13 +330,13 @@
                 <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
-                100 tasks/day
+                2,000 tasks/mo
               </li>
               <li class="flex items-start gap-2">
                 <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
-                40,000 messages/mo
+                25,000 messages/mo
               </li>
               <li class="flex items-start gap-2">
                 <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -433,7 +433,7 @@
           </div>
           <!-- Limits footer -->
           <div id="pricingLimits" class="mt-4 pt-3 border-t border-gray-200 text-xs text-gray-400 text-center">
-            Limits: 50 tasks/day &middot; 20,000 messages/mo
+            Limits: 1,000 tasks/mo &middot; 12,000 messages/mo
           </div>
         </div>
 
@@ -495,8 +495,9 @@
         name: 'Essential',
         base: 25000,
         included_people: 5,
-        tasks_per_day: 30,
-        messages_per_month: 10000,
+        tasks_per_month: 500,
+        messages_per_month: 5000,
+        voice_pool: 1200,
         voice_included: false,
         extra_person_price: 5000,
         voice_addon_price: 7000
@@ -505,8 +506,9 @@
         name: 'Pro',
         base: 50000,
         included_people: 8,
-        tasks_per_day: 50,
-        messages_per_month: 20000,
+        tasks_per_month: 1000,
+        messages_per_month: 12000,
+        voice_pool: 2500,
         voice_included: true,
         extra_person_price: 5000,
         voice_addon_price: 0
@@ -515,8 +517,9 @@
         name: 'Max',
         base: 100000,
         included_people: 15,
-        tasks_per_day: 100,
-        messages_per_month: 40000,
+        tasks_per_month: 2000,
+        messages_per_month: 25000,
+        voice_pool: 6000,
         voice_included: true,
         extra_person_price: 5000,
         voice_addon_price: 0
@@ -780,7 +783,7 @@
 
       // Limits footer
       document.getElementById('pricingLimits').textContent =
-        `Limits: ${plan.tasks_per_day} tasks/day \u00b7 ${plan.messages_per_month.toLocaleString()} messages/mo`;
+        `Limits: ${plan.tasks_per_month.toLocaleString()} tasks/mo \u00b7 ${plan.messages_per_month.toLocaleString()} messages/mo`;
     }
 
     function addMember() {

@@ -1,9 +1,9 @@
 -- HomeOps Complete Database Schema - Fresh Start
 -- Run this in Supabase SQL Editor for a clean database setup
--- Combines all migrations (001-020) into a single script
+-- Combines all migrations (001-022) into a single script
 --
--- Last Updated: 2026-02-09
--- Pricing: Essential PKR 25K (5 ppl, 30 tasks/day) | Pro PKR 50K (8 ppl, 50 tasks/day) | Max PKR 100K (15 ppl, 100 tasks/day)
+-- Last Updated: 2026-02-10
+-- Pricing: Essential PKR 25K (5 ppl, 500 tasks/mo, 5K msgs) | Pro PKR 50K (8 ppl, 1K tasks/mo, 12K msgs) | Max PKR 100K (15 ppl, 2K tasks/mo, 25K msgs)
 
 -- ============================================
 -- PART 1: CORE TABLES
@@ -39,10 +39,10 @@ CREATE TABLE IF NOT EXISTS households (
   plan_tier TEXT DEFAULT 'essential' CHECK (plan_tier IN ('essential', 'pro', 'max', 'starter', 'family', 'premium', 'custom')),
   max_members INTEGER DEFAULT 5,
 
-  -- Usage caps (from migration 015)
-  cap_tasks_per_day INTEGER DEFAULT 30,
-  cap_messages_per_month INTEGER DEFAULT 10000,
-  cap_voice_notes_per_staff_month INTEGER DEFAULT 250,
+  -- Usage caps (from migration 015, updated in 022 for monthly model)
+  cap_tasks_per_month INTEGER DEFAULT 500,
+  cap_messages_per_month INTEGER DEFAULT 5000,
+  cap_voice_notes_per_month INTEGER DEFAULT 0,  -- Pool: Essential=0 (1200 with add-on), Pro=2500, Max=6000
   onboarded_at TIMESTAMPTZ,
   onboarding_source TEXT DEFAULT 'whatsapp',
 
@@ -224,7 +224,7 @@ CREATE TABLE IF NOT EXISTS usage_events (
     'message_inbound', 'message_outbound',
     'voice_note_inbound', 'voice_note_outbound',
     'task_created', 'task_completed',
-    'stt_transcription', 'tts_generation', 'ai_classification'
+    'stt_transcription', 'tts_generation', 'ai_classification', 'ai_call'
   )),
   service TEXT NOT NULL CHECK (service IN ('twilio', 'openai', 'system')),
   details JSONB,
@@ -246,6 +246,18 @@ CREATE TABLE IF NOT EXISTS usage_daily (
   ai_calls INTEGER DEFAULT 0,
   estimated_cost_usd DECIMAL(10,4) DEFAULT 0,
   UNIQUE(household_id, date)
+);
+
+-- Message history for conversation context (from migration 021)
+CREATE TABLE IF NOT EXISTS message_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  household_id UUID REFERENCES households(id) ON DELETE CASCADE,
+  user_number TEXT NOT NULL,
+  direction TEXT NOT NULL CHECK (direction IN ('inbound', 'outbound')),
+  content TEXT,
+  message_type TEXT DEFAULT 'text',
+  intent TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ============================================
@@ -285,6 +297,10 @@ CREATE INDEX IF NOT EXISTS idx_usage_events_household_date ON usage_events(house
 CREATE INDEX IF NOT EXISTS idx_usage_events_type ON usage_events(event_type, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_usage_daily_household_date ON usage_daily(household_id, date DESC);
 
+-- Message history indexes (from migration 021)
+CREATE INDEX IF NOT EXISTS idx_message_history_user_recent ON message_history(user_number, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_message_history_household ON message_history(household_id, created_at DESC);
+
 -- ============================================
 -- PART 5: ROW LEVEL SECURITY
 -- ============================================
@@ -308,6 +324,11 @@ GRANT ALL ON pending_signups TO authenticated;
 GRANT ALL ON payments TO authenticated;
 GRANT ALL ON usage_events TO authenticated;
 GRANT ALL ON usage_daily TO authenticated;
+GRANT ALL ON message_history TO authenticated;
+
+-- Message history RLS (from migration 021)
+ALTER TABLE message_history ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "service_role_all" ON message_history FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================
 -- PART 6: HELPER FUNCTIONS
@@ -522,8 +543,9 @@ SELECT
   h.last_payment_amount,
   h.trial_ends_at,
   h.grace_period_ends_at,
-  h.cap_tasks_per_day,
+  h.cap_tasks_per_month,
   h.cap_messages_per_month,
+  h.cap_voice_notes_per_month,
   h.expected_monthly_amount,
   CASE
     WHEN h.subscription_status = 'trial' THEN h.trial_ends_at - NOW()
@@ -533,6 +555,7 @@ SELECT
   (SELECT COUNT(*) FROM tasks t WHERE t.household_id = h.id) as total_tasks,
   (SELECT COUNT(*) FROM members m WHERE m.household_id = h.id) as total_members,
   (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id) as total_staff,
+  (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id AND s.voice_notes_enabled = true) as voice_staff_count,
   -- Cost columns (from migration 019)
   COALESCE((SELECT SUM(ud.estimated_cost_usd) FROM usage_daily ud WHERE ud.household_id = h.id), 0) as all_time_cost_usd,
   COALESCE((SELECT SUM(ud.estimated_cost_usd) FROM usage_daily ud WHERE ud.household_id = h.id), 0) *
@@ -710,11 +733,11 @@ COMMENT ON TABLE pending_signups IS 'Temporary storage for signups awaiting paym
 COMMENT ON TABLE owner_whitelist IS 'Phone numbers that auto-activate without payment (for testing/owner use)';
 COMMENT ON TABLE app_config IS 'Application configuration and secrets';
 
-COMMENT ON COLUMN households.plan_tier IS 'Plan tier: essential (25K, 30/day), pro (50K, 50/day), max (100K, 100/day), or legacy tiers';
+COMMENT ON COLUMN households.plan_tier IS 'Plan tier: essential (25K, 500/mo), pro (50K, 1K/mo), max (100K, 2K/mo), or legacy tiers';
 COMMENT ON COLUMN households.max_members IS 'Max people. Essential=5, Pro=8, Max=15';
-COMMENT ON COLUMN households.cap_tasks_per_day IS 'Max tasks per day. Essential=30, Pro=50, Max=100';
-COMMENT ON COLUMN households.cap_messages_per_month IS 'Max messages per month. Essential=10000, Pro=20000, Max=40000';
-COMMENT ON COLUMN households.cap_voice_notes_per_staff_month IS 'Max voice notes per staff per month. All plans=250';
+COMMENT ON COLUMN households.cap_tasks_per_month IS 'Max tasks per month. Essential=500, Pro=1000, Max=2000';
+COMMENT ON COLUMN households.cap_messages_per_month IS 'Max messages per month. Essential=5000, Pro=12000, Max=25000';
+COMMENT ON COLUMN households.cap_voice_notes_per_month IS 'Voice notes pool per month. Essential=0 (1200 with add-on), Pro=2500, Max=6000';
 COMMENT ON TABLE usage_events IS 'Log of every billable action per household for usage tracking and cap enforcement';
 COMMENT ON TABLE usage_daily IS 'Aggregated daily usage counts and costs per household (populated nightly by WF8)';
 COMMENT ON COLUMN usage_daily.estimated_cost_usd IS 'Estimated API cost in USD calculated from usage rates (Twilio + OpenAI)';
@@ -742,6 +765,27 @@ COMMENT ON COLUMN payments.payment_classification IS 'full=covers all, base_only
 COMMENT ON COLUMN payments.addons_activated IS 'JSON record of add-ons activated by this payment';
 COMMENT ON COLUMN payments.proof_url IS 'URL of payment proof screenshot from WhatsApp MediaUrl';
 COMMENT ON FUNCTION admin_cost_dashboard IS 'Password-protected admin dashboard returning household cost/profitability data as JSON';
+
+-- Message history comments (from migration 021)
+COMMENT ON TABLE message_history IS 'Recent message history per user for AI conversation context (auto-cleaned after 24h)';
+COMMENT ON COLUMN message_history.user_number IS 'WhatsApp number of the human user (not HomeOps number)';
+COMMENT ON COLUMN message_history.direction IS 'inbound = user to HomeOps, outbound = HomeOps to user';
+COMMENT ON COLUMN message_history.content IS 'Message text content (truncated to 500 chars for context)';
+COMMENT ON COLUMN message_history.intent IS 'AI-classified intent for context';
+
+-- Cleanup function for old messages (from migration 021)
+CREATE OR REPLACE FUNCTION cleanup_old_messages()
+RETURNS INTEGER AS $$
+DECLARE
+  deleted_count INTEGER;
+BEGIN
+  DELETE FROM message_history WHERE created_at < NOW() - INTERVAL '24 hours';
+  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+  RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION cleanup_old_messages() TO authenticated;
 
 -- ============================================
 -- VERIFICATION QUERIES (uncomment to test)
