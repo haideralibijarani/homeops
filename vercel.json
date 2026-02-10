@@ -1,4 +1,7 @@
 {
+  "redirects": [
+    { "source": "/", "destination": "/signup", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/signup", "destination": "/web/signup.html" },
     { "source": "/admin", "destination": "/web/admin-costs.html" }
