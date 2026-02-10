@@ -614,6 +614,7 @@ BEGIN
     SELECT
       h.id, h.name, h.plan_tier, h.subscription_status, h.expected_monthly_amount,
       h.subscribed_at, h.created_at, h.city, h.country,
+      h.cap_voice_notes_per_month,
       (SELECT COUNT(*) FROM members m WHERE m.household_id = h.id) as member_count,
       (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id) as staff_count,
       (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id AND s.voice_notes_enabled = true) as voice_staff_count,
@@ -642,7 +643,8 @@ BEGIN
       COALESCE(SUM(ud.messages_inbound + ud.messages_outbound) FILTER (WHERE ud.date >= pkt_month_start), 0) + COALESCE(te.msgs_in, 0) + COALESCE(te.msgs_out, 0) as month_messages,
       COALESCE(SUM(ud.tasks_created) FILTER (WHERE ud.date >= pkt_month_start), 0) + COALESCE(te.tasks_created, 0) as month_tasks,
       COALESCE(SUM(ud.ai_calls) FILTER (WHERE ud.date >= pkt_month_start), 0) + COALESCE(te.ai_calls, 0) as month_ai_calls,
-      COALESCE(SUM(ud.voice_notes_outbound) FILTER (WHERE ud.date >= pkt_month_start), 0) + COALESCE(te.voice_out, 0) as month_voice_notes,
+      COALESCE(SUM(ud.voice_notes_inbound) FILTER (WHERE ud.date >= pkt_month_start), 0) + COALESCE(te.voice_in, 0) as month_voice_inbound,
+      COALESCE(SUM(ud.voice_notes_outbound) FILTER (WHERE ud.date >= pkt_month_start), 0) + COALESCE(te.voice_out, 0) as month_voice_outbound,
       -- Last 30 days (PKT)
       COALESCE(SUM(ud.estimated_cost_usd) FILTER (WHERE ud.date >= pkt_today - 30), 0) + (
         (COALESCE(te.msgs_in, 0) + COALESCE(te.msgs_out, 0) + COALESCE(te.voice_in, 0) + COALESCE(te.voice_out, 0)) * (SELECT twilio_msg FROM cost_rates) +
@@ -659,7 +661,7 @@ BEGIN
     LEFT JOIN usage_daily ud ON ud.household_id = h.id
     LEFT JOIN today_events te ON te.household_id = h.id
     GROUP BY h.id, h.name, h.plan_tier, h.subscription_status, h.expected_monthly_amount,
-             h.subscribed_at, h.created_at, h.city, h.country,
+             h.subscribed_at, h.created_at, h.city, h.country, h.cap_voice_notes_per_month,
              te.msgs_in, te.msgs_out, te.tasks_created, te.voice_in, te.voice_out,
              te.ai_calls, te.stt_minutes, te.tts_characters
   )
@@ -707,14 +709,17 @@ BEGIN
           'usage', json_build_object(
             'all_time_messages', hd.all_time_msgs_in + hd.all_time_msgs_out,
             'all_time_tasks', hd.all_time_tasks,
-            'all_time_voice_notes', hd.all_time_voice_in + hd.all_time_voice_out,
+            'all_time_voice_inbound', hd.all_time_voice_in,
+            'all_time_voice_outbound', hd.all_time_voice_out,
             'all_time_ai_calls', hd.all_time_ai_calls,
             'all_time_stt_minutes', ROUND(hd.all_time_stt_minutes::NUMERIC, 2),
             'all_time_tts_characters', hd.all_time_tts_characters,
             'current_month_messages', hd.month_messages,
             'current_month_tasks', hd.month_tasks,
             'current_month_ai_calls', hd.month_ai_calls,
-            'current_month_voice_notes', hd.month_voice_notes
+            'current_month_voice_inbound', hd.month_voice_inbound,
+            'current_month_voice_outbound', hd.month_voice_outbound,
+            'voice_outbound_cap', COALESCE(hd.cap_voice_notes_per_month, 0)
           ),
           'cost_breakdown', json_build_object(
             'twilio_usd', ROUND(hd.breakdown_twilio::NUMERIC, 4),
