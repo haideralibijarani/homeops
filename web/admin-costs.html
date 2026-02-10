@@ -107,7 +107,10 @@
             <p class="text-xs text-gray-500" id="headerTimestamp"></p>
           </div>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <button onclick="toggleCurrency()" id="currencyToggle"
+            class="px-3 py-1.5 text-xs font-bold font-mono bg-gray-900 text-white hover:bg-gray-700 rounded-lg transition min-w-[52px] text-center"
+            title="Toggle between PKR and USD">PKR</button>
           <button onclick="refreshData()" class="px-3 py-1.5 text-xs font-medium text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg transition flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -268,6 +271,36 @@
     // ============================================
     let dashboardData = null;
     let currentSort = { key: 'margin_pct', dir: 'desc' };
+    let currentCurrency = 'pkr';
+
+    // ============================================
+    // CURRENCY HELPERS
+    // ============================================
+    function toggleCurrency() {
+      currentCurrency = currentCurrency === 'pkr' ? 'usd' : 'pkr';
+      document.getElementById('currencyToggle').textContent = currentCurrency.toUpperCase();
+      renderData();
+    }
+
+    function fmtMoney(usd, pkr, opts = {}) {
+      const decimals = opts.decimals !== undefined ? opts.decimals : (currentCurrency === 'usd' ? 4 : 0);
+      if (currentCurrency === 'usd') {
+        return '$' + Number(usd || 0).toLocaleString(undefined, {minimumFractionDigits: decimals, maximumFractionDigits: decimals});
+      }
+      return 'PKR ' + Number(pkr || 0).toLocaleString(undefined, {minimumFractionDigits: decimals, maximumFractionDigits: decimals});
+    }
+
+    function fmtMoneyFromUsd(usd, rate, opts = {}) {
+      return fmtMoney(usd, Number(usd || 0) * rate, opts);
+    }
+
+    function fmtRate(usd) {
+      if (currentCurrency === 'usd') {
+        return '$' + Number(usd || 0).toFixed(6);
+      }
+      const rate = dashboardData ? dashboardData.exchange_rate : 278;
+      return 'PKR ' + (Number(usd || 0) * rate).toFixed(4);
+    }
 
     // ============================================
     // LOGIN
@@ -383,15 +416,13 @@
       document.getElementById('totalHouseholds').textContent = t.total_households;
 
       document.getElementById('totalRevenue').textContent =
-        'PKR ' + Number(t.total_revenue_monthly_pkr).toLocaleString();
-      document.getElementById('totalRevenueUsd').textContent =
-        '$' + Number(t.total_revenue_monthly_usd).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        fmtMoney(t.total_revenue_monthly_usd, t.total_revenue_monthly_pkr, {decimals: currentCurrency === 'usd' ? 2 : 0});
+      document.getElementById('totalRevenueUsd').textContent = '';
 
-      document.getElementById('totalCost').textContent =
-        '$' + Number(t.total_cost_current_month_usd).toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4});
       const costPkr = Number(t.total_cost_current_month_usd) * rate;
-      document.getElementById('totalCostPkr').textContent =
-        'PKR ' + costPkr.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+      document.getElementById('totalCost').textContent =
+        fmtMoney(t.total_cost_current_month_usd, costPkr);
+      document.getElementById('totalCostPkr').textContent = '';
 
       // Average margin
       const margins = households
@@ -402,14 +433,14 @@
         : '0.0';
       document.getElementById('avgMargin').textContent = avgMargin + '%';
       document.getElementById('totalMarginPkr').textContent =
-        'PKR ' + Number(t.total_margin_monthly_pkr).toLocaleString(undefined, {maximumFractionDigits: 0});
+        fmtMoney(t.total_margin_monthly_pkr / rate, t.total_margin_monthly_pkr, {decimals: currentCurrency === 'usd' ? 2 : 0});
 
       // Cost rates
       if (d.cost_rates) {
-        document.getElementById('rateTwilio').textContent = '$' + Number(d.cost_rates.twilio_message).toFixed(4);
-        document.getElementById('rateStt').textContent = '$' + Number(d.cost_rates.stt_per_minute).toFixed(4);
-        document.getElementById('rateTts').textContent = '$' + Number(d.cost_rates.tts_per_character).toFixed(6);
-        document.getElementById('rateAi').textContent = '$' + Number(d.cost_rates.ai_call).toFixed(4);
+        document.getElementById('rateTwilio').textContent = fmtRate(d.cost_rates.twilio_message);
+        document.getElementById('rateStt').textContent = fmtRate(d.cost_rates.stt_per_minute);
+        document.getElementById('rateTts').textContent = fmtRate(d.cost_rates.tts_per_character);
+        document.getElementById('rateAi').textContent = fmtRate(d.cost_rates.ai_call);
       }
       document.getElementById('rateExchange').textContent = rate + ' PKR/USD';
 
@@ -429,14 +460,16 @@
       }
 
       tbody.innerHTML = sorted.map((h, i) => {
-        const revenue = Number(h.revenue?.monthly_pkr || 0);
-        const costMonth = Number(h.costs?.current_month_usd || 0);
+        const revenuePkr = Number(h.revenue?.monthly_pkr || 0);
+        const revenueUsd = Number(h.revenue?.monthly_usd || 0);
+        const costMonthUsd = Number(h.costs?.current_month_usd || 0);
         const costMonthPkr = Number(h.costs?.current_month_pkr || 0);
         const marginPkr = Number(h.margin?.monthly_margin_pkr || 0);
+        const marginUsd = Number(h.margin?.monthly_margin_usd || 0);
         const marginPct = Number(h.margin?.margin_pct || 0);
         const people = (Number(h.member_count) || 0) + (Number(h.staff_count) || 0);
 
-        const marginClass = revenue === 0 ? 'margin-zero'
+        const marginClass = revenuePkr === 0 ? 'margin-zero'
           : marginPct >= 70 ? 'margin-good'
           : marginPct >= 40 ? 'margin-ok'
           : 'margin-bad';
@@ -465,9 +498,9 @@
               ${h.member_count || 0}m + ${h.staff_count || 0}s
               ${h.voice_staff_count > 0 ? '<span class="text-brand-500" title="Voice-enabled staff">&#9835;' + h.voice_staff_count + '</span>' : ''}
             </td>
-            <td class="px-4 py-3.5 text-right font-mono text-xs text-gray-900">PKR ${revenue.toLocaleString()}</td>
-            <td class="px-4 py-3.5 text-right font-mono text-xs text-gray-900">$${costMonth.toFixed(4)}</td>
-            <td class="px-4 py-3.5 text-right font-mono text-xs text-gray-900">PKR ${marginPkr.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+            <td class="px-4 py-3.5 text-right font-mono text-xs text-gray-900">${fmtMoney(revenueUsd, revenuePkr, {decimals: currentCurrency === 'usd' ? 2 : 0})}</td>
+            <td class="px-4 py-3.5 text-right font-mono text-xs text-gray-900">${fmtMoney(costMonthUsd, costMonthPkr)}</td>
+            <td class="px-4 py-3.5 text-right font-mono text-xs text-gray-900">${fmtMoney(marginUsd, marginPkr, {decimals: currentCurrency === 'usd' ? 2 : 0})}</td>
             <td class="px-4 py-3.5 text-center">
               <span class="margin-pill ${marginClass}">${marginPct.toFixed(1)}%</span>
             </td>
@@ -478,21 +511,21 @@
                 <div>
                   <p class="font-semibold text-gray-500 uppercase tracking-wider mb-2">Cost Breakdown (All-Time)</p>
                   <div class="space-y-1 font-mono">
-                    <div class="flex justify-between"><span class="text-gray-500">Twilio</span><span>$${Number(breakdown.twilio_usd || 0).toFixed(4)}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">STT</span><span>$${Number(breakdown.stt_usd || 0).toFixed(4)}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">TTS</span><span>$${Number(breakdown.tts_usd || 0).toFixed(4)}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">AI</span><span>$${Number(breakdown.ai_usd || 0).toFixed(4)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Twilio</span><span>${fmtMoneyFromUsd(breakdown.twilio_usd, rate)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">STT</span><span>${fmtMoneyFromUsd(breakdown.stt_usd, rate)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">TTS</span><span>${fmtMoneyFromUsd(breakdown.tts_usd, rate)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">AI</span><span>${fmtMoneyFromUsd(breakdown.ai_usd, rate)}</span></div>
                     <div class="flex justify-between border-t border-gray-200 pt-1 font-semibold">
-                      <span>All-Time</span><span>$${Number(costsAll.all_time_usd || 0).toFixed(4)}</span>
+                      <span>All-Time</span><span>${fmtMoney(costsAll.all_time_usd, costsAll.all_time_pkr)}</span>
                     </div>
                   </div>
                 </div>
                 <div>
                   <p class="font-semibold text-gray-500 uppercase tracking-wider mb-2">Cost Windows</p>
                   <div class="space-y-1 font-mono">
-                    <div class="flex justify-between"><span class="text-gray-500">This Month</span><span>$${Number(costsAll.current_month_usd || 0).toFixed(4)}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Last 30 Days</span><span>$${Number(costsAll.last_30d_usd || 0).toFixed(4)}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">All-Time PKR</span><span>PKR ${Number(costsAll.all_time_pkr || 0).toLocaleString(undefined, {maximumFractionDigits: 0})}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">This Month</span><span>${fmtMoney(costsAll.current_month_usd, costsAll.current_month_pkr)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Last 30 Days</span><span>${fmtMoney(costsAll.last_30d_usd, costsAll.last_30d_pkr)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">All-Time</span><span>${fmtMoney(costsAll.all_time_usd, costsAll.all_time_pkr)}</span></div>
                   </div>
                 </div>
                 <div>
