@@ -211,6 +211,118 @@ GRANT EXECUTE ON FUNCTION admin_cost_dashboard(TEXT) TO anon;
 GRANT EXECUTE ON FUNCTION admin_cost_dashboard(TEXT) TO authenticated;
 
 -- ============================================
+-- FUNCTION 2: Daily Usage Breakdown
+-- ============================================
+-- Returns day-by-day usage rows for a household or all households
+-- Supports date range filtering via period parameter
+
+CREATE OR REPLACE FUNCTION admin_daily_usage(
+  admin_secret TEXT,
+  p_household_id UUID DEFAULT NULL,
+  p_period TEXT DEFAULT 'month'  -- 'month' | '30d' | 'all'
+)
+RETURNS JSON AS $$
+DECLARE
+  stored_secret TEXT;
+  result JSON;
+  pkt_today DATE;
+  pkt_today_start TIMESTAMPTZ;
+  date_from DATE;
+BEGIN
+  -- Validate secret
+  SELECT value INTO stored_secret FROM app_config WHERE key = 'admin_dashboard_secret';
+  IF stored_secret IS NULL OR admin_secret IS DISTINCT FROM stored_secret THEN
+    RETURN json_build_object('error', 'unauthorized');
+  END IF;
+
+  pkt_today := (NOW() AT TIME ZONE 'Asia/Karachi')::DATE;
+  pkt_today_start := (pkt_today::TEXT || ' 00:00:00+05:00')::TIMESTAMPTZ;
+
+  -- Date range
+  IF p_period = '30d' THEN
+    date_from := pkt_today - 30;
+  ELSIF p_period = 'all' THEN
+    date_from := '2020-01-01'::DATE;
+  ELSE
+    date_from := date_trunc('month', pkt_today)::DATE;
+  END IF;
+
+  WITH exchange AS (
+    SELECT COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_exchange_rate_pkr_usd'), '')::DECIMAL, 278) as rate
+  ),
+  -- Historical days from usage_daily
+  daily_rows AS (
+    SELECT
+      ud.household_id, h.name as household_name,
+      ud.date, ud.messages_inbound, ud.messages_outbound,
+      ud.tasks_created, ud.voice_notes_inbound, ud.voice_notes_outbound,
+      ud.ai_calls, ud.stt_minutes, ud.tts_characters, ud.estimated_cost_usd
+    FROM usage_daily ud
+    JOIN households h ON h.id = ud.household_id
+    WHERE ud.date >= date_from
+      AND ud.date < pkt_today
+      AND (p_household_id IS NULL OR ud.household_id = p_household_id)
+  ),
+  -- Today's real-time events (not yet in usage_daily)
+  today_rows AS (
+    SELECT
+      ue.household_id, h.name as household_name,
+      pkt_today as date,
+      COUNT(*) FILTER (WHERE event_type = 'message_inbound') as messages_inbound,
+      COUNT(*) FILTER (WHERE event_type = 'message_outbound') as messages_outbound,
+      COUNT(*) FILTER (WHERE event_type = 'task_created') as tasks_created,
+      COUNT(*) FILTER (WHERE event_type = 'voice_note_inbound') as voice_notes_inbound,
+      COUNT(*) FILTER (WHERE event_type = 'voice_note_outbound') as voice_notes_outbound,
+      COUNT(*) FILTER (WHERE event_type IN ('ai_classification', 'ai_call')) as ai_calls,
+      COALESCE(SUM(COALESCE((details->>'duration_seconds')::DECIMAL, 0) / 60.0) FILTER (WHERE event_type = 'stt_transcription'), 0) as stt_minutes,
+      COALESCE(SUM(COALESCE((details->>'character_count')::INTEGER, 0)) FILTER (WHERE event_type = 'tts_generation'), 0) as tts_characters,
+      0::DECIMAL as estimated_cost_usd  -- calculated below
+    FROM usage_events ue
+    JOIN households h ON h.id = ue.household_id
+    WHERE ue.created_at >= pkt_today_start
+      AND (p_household_id IS NULL OR ue.household_id = p_household_id)
+    GROUP BY ue.household_id, h.name
+  ),
+  all_rows AS (
+    SELECT * FROM daily_rows
+    UNION ALL
+    SELECT * FROM today_rows
+  )
+  SELECT json_build_object(
+    'success', true,
+    'period', p_period,
+    'date_from', date_from,
+    'date_to', pkt_today,
+    'exchange_rate', (SELECT rate FROM exchange),
+    'rows', COALESCE((
+      SELECT json_agg(json_build_object(
+        'household_id', r.household_id,
+        'household_name', r.household_name,
+        'date', r.date,
+        'messages_in', r.messages_inbound,
+        'messages_out', r.messages_outbound,
+        'tasks', r.tasks_created,
+        'voice_in', r.voice_notes_inbound,
+        'voice_out', r.voice_notes_outbound,
+        'ai_calls', r.ai_calls,
+        'stt_minutes', ROUND(r.stt_minutes::NUMERIC, 2),
+        'tts_characters', r.tts_characters,
+        'cost_usd', ROUND(r.estimated_cost_usd::NUMERIC, 4),
+        'cost_pkr', ROUND((r.estimated_cost_usd * (SELECT rate FROM exchange))::NUMERIC, 2),
+        'is_today', (r.date = pkt_today)
+      ) ORDER BY r.date DESC, r.household_name)
+      FROM all_rows r
+    ), '[]'::JSON)
+  ) INTO result;
+
+  RETURN result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION admin_daily_usage(TEXT, UUID, TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION admin_daily_usage(TEXT, UUID, TEXT) TO authenticated;
+
+-- ============================================
 -- DONE
 -- ============================================
 -- After running this migration:
@@ -218,3 +330,4 @@ GRANT EXECUTE ON FUNCTION admin_cost_dashboard(TEXT) TO authenticated;
 -- 2. Date boundaries use PKT (Asia/Karachi) instead of UTC
 -- 3. current_month_voice_notes added to usage output
 -- 4. Dashboard data will match WhatsApp usage report accuracy
+-- 5. admin_daily_usage() returns day-by-day usage breakdown with filters

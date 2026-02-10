@@ -51,6 +51,11 @@
     .margin-zero { background: #f4f4f5; color: #71717a; }
     tr.household-row { cursor: pointer; transition: background 0.1s; }
     tr.household-row:hover { background: #f0fdf4; }
+    .daily-period-btn { background: #f4f4f5; color: #71717a; }
+    .daily-period-btn:hover { background: #e4e4e7; }
+    .daily-period-btn.active { background: #166534; color: white; }
+    #dailyChevron.open { transform: rotate(180deg); }
+    .today-row { background: #f0fdf4; }
     .login-input:focus { box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15); }
     .grain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.02; z-index: 50;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
@@ -236,6 +241,49 @@
               <tr><td colspan="8" class="px-5 py-12 text-center text-gray-400">Loading...</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Daily Usage -->
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden slide-up mb-6">
+        <button onclick="toggleDailyUsage()" class="w-full px-5 py-4 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 transition">
+          <h2 class="text-sm font-bold text-gray-900">Daily Usage Breakdown</h2>
+          <svg id="dailyChevron" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="dailyUsagePanel" class="hidden">
+          <div class="px-5 py-3 border-b border-gray-100 flex flex-wrap items-center gap-3">
+            <select id="dailyHousehold" onchange="loadDailyUsage()" class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 font-medium">
+              <option value="">All Households</option>
+            </select>
+            <div class="flex gap-1">
+              <button onclick="setDailyPeriod('month')" class="daily-period-btn active text-xs px-3 py-1.5 rounded-lg font-medium transition" data-period="month">This Month</button>
+              <button onclick="setDailyPeriod('30d')" class="daily-period-btn text-xs px-3 py-1.5 rounded-lg font-medium transition" data-period="30d">Last 30 Days</button>
+              <button onclick="setDailyPeriod('all')" class="daily-period-btn text-xs px-3 py-1.5 rounded-lg font-medium transition" data-period="all">All Time</button>
+            </div>
+            <span class="text-[10px] text-gray-400 font-mono ml-auto" id="dailyRowCount"></span>
+          </div>
+          <div class="overflow-x-auto" style="max-height: 480px; overflow-y: auto;">
+            <table class="w-full text-xs">
+              <thead class="sticky top-0 bg-white">
+                <tr class="border-b border-gray-100 text-[10px] text-gray-500 uppercase tracking-wider">
+                  <th class="px-4 py-2.5 text-left font-semibold">Date</th>
+                  <th class="px-3 py-2.5 text-left font-semibold">Household</th>
+                  <th class="px-3 py-2.5 text-right font-semibold">Msgs In</th>
+                  <th class="px-3 py-2.5 text-right font-semibold">Msgs Out</th>
+                  <th class="px-3 py-2.5 text-right font-semibold">Tasks</th>
+                  <th class="px-3 py-2.5 text-right font-semibold">Voice In</th>
+                  <th class="px-3 py-2.5 text-right font-semibold">Voice Out</th>
+                  <th class="px-3 py-2.5 text-right font-semibold">AI</th>
+                  <th class="px-4 py-2.5 text-right font-semibold">Cost</th>
+                </tr>
+              </thead>
+              <tbody id="dailyTableBody">
+                <tr><td colspan="9" class="px-5 py-8 text-center text-gray-400">Click to load daily usage data</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -663,6 +711,122 @@
     function toggleExpand(index) {
       const row = document.getElementById('expand-' + index);
       if (row) row.classList.toggle('open');
+    }
+
+    // ============================================
+    // DAILY USAGE
+    // ============================================
+    let dailyPeriod = 'month';
+    let dailyOpen = false;
+    let dailyLoaded = false;
+
+    function toggleDailyUsage() {
+      dailyOpen = !dailyOpen;
+      document.getElementById('dailyUsagePanel').classList.toggle('hidden', !dailyOpen);
+      document.getElementById('dailyChevron').classList.toggle('open', dailyOpen);
+      if (dailyOpen && !dailyLoaded) loadDailyUsage();
+    }
+
+    function setDailyPeriod(period) {
+      dailyPeriod = period;
+      document.querySelectorAll('.daily-period-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.period === period);
+      });
+      loadDailyUsage();
+    }
+
+    async function loadDailyUsage() {
+      const secret = sessionStorage.getItem('homeops_admin_secret');
+      if (!secret) return;
+      const tbody = document.getElementById('dailyTableBody');
+      tbody.innerHTML = '<tr><td colspan="9" class="px-5 py-8 text-center text-gray-400">Loading...</td></tr>';
+
+      const householdId = document.getElementById('dailyHousehold').value || null;
+      const params = { admin_secret: secret, p_period: dailyPeriod };
+      if (householdId) params.p_household_id = householdId;
+
+      try {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_daily_usage`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(params)
+        });
+        const data = await resp.json();
+        if (data.error) {
+          tbody.innerHTML = '<tr><td colspan="9" class="px-5 py-8 text-center text-red-500">Error: ' + data.error + '</td></tr>';
+          return;
+        }
+        dailyLoaded = true;
+        renderDailyUsage(data);
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="9" class="px-5 py-8 text-center text-red-500">Failed to load: ' + e.message + '</td></tr>';
+      }
+    }
+
+    function renderDailyUsage(data) {
+      const rows = data.rows || [];
+      const rate = data.exchange_rate || 278;
+      const tbody = document.getElementById('dailyTableBody');
+      document.getElementById('dailyRowCount').textContent = rows.length + ' rows';
+
+      // Populate household dropdown if not yet done
+      const select = document.getElementById('dailyHousehold');
+      if (select.options.length <= 1 && dashboardData?.households) {
+        for (const h of dashboardData.households) {
+          const opt = document.createElement('option');
+          opt.value = h.id;
+          opt.textContent = h.name;
+          select.appendChild(opt);
+        }
+      }
+
+      if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="px-5 py-8 text-center text-gray-400">No usage data for this period</td></tr>';
+        return;
+      }
+
+      // Calculate totals
+      let totals = { msgs_in: 0, msgs_out: 0, tasks: 0, voice_in: 0, voice_out: 0, ai: 0, cost_usd: 0, cost_pkr: 0 };
+      for (const r of rows) {
+        totals.msgs_in += Number(r.messages_in || 0);
+        totals.msgs_out += Number(r.messages_out || 0);
+        totals.tasks += Number(r.tasks || 0);
+        totals.voice_in += Number(r.voice_in || 0);
+        totals.voice_out += Number(r.voice_out || 0);
+        totals.ai += Number(r.ai_calls || 0);
+        totals.cost_usd += Number(r.cost_usd || 0);
+        totals.cost_pkr += Number(r.cost_pkr || 0);
+      }
+
+      tbody.innerHTML = rows.map(r => {
+        const isToday = r.is_today;
+        const dateStr = new Date(r.date + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+        return `<tr class="${isToday ? 'today-row' : 'hover:bg-gray-50'}">
+          <td class="px-4 py-2 font-mono text-gray-700">${dateStr}${isToday ? ' <span class="text-[9px] font-bold text-brand-600 uppercase">live</span>' : ''}</td>
+          <td class="px-3 py-2 text-gray-600 truncate max-w-[120px]">${r.household_name || ''}</td>
+          <td class="px-3 py-2 text-right font-mono text-gray-700">${r.messages_in || 0}</td>
+          <td class="px-3 py-2 text-right font-mono text-gray-700">${r.messages_out || 0}</td>
+          <td class="px-3 py-2 text-right font-mono text-gray-700">${r.tasks || 0}</td>
+          <td class="px-3 py-2 text-right font-mono text-gray-700">${r.voice_in || 0}</td>
+          <td class="px-3 py-2 text-right font-mono text-gray-700">${r.voice_out || 0}</td>
+          <td class="px-3 py-2 text-right font-mono text-gray-700">${r.ai_calls || 0}</td>
+          <td class="px-4 py-2 text-right font-mono font-semibold text-gray-900">${fmtMoney(r.cost_usd, r.cost_pkr)}</td>
+        </tr>`;
+      }).join('') + `<tr class="border-t-2 border-gray-300 bg-gray-50 font-semibold">
+        <td class="px-4 py-2.5 text-gray-700">Total</td>
+        <td class="px-3 py-2.5 text-gray-500 text-[10px]">${rows.length} days</td>
+        <td class="px-3 py-2.5 text-right font-mono">${totals.msgs_in.toLocaleString()}</td>
+        <td class="px-3 py-2.5 text-right font-mono">${totals.msgs_out.toLocaleString()}</td>
+        <td class="px-3 py-2.5 text-right font-mono">${totals.tasks.toLocaleString()}</td>
+        <td class="px-3 py-2.5 text-right font-mono">${totals.voice_in.toLocaleString()}</td>
+        <td class="px-3 py-2.5 text-right font-mono">${totals.voice_out.toLocaleString()}</td>
+        <td class="px-3 py-2.5 text-right font-mono">${totals.ai.toLocaleString()}</td>
+        <td class="px-4 py-2.5 text-right font-mono">${fmtMoney(totals.cost_usd, totals.cost_pkr)}</td>
+      </tr>`;
     }
 
     // ============================================
