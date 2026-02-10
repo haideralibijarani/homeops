@@ -1,6 +1,6 @@
 -- HomeOps Complete Database Schema - Fresh Start
 -- Run this in Supabase SQL Editor for a clean database setup
--- Combines all migrations (001-022) into a single script
+-- Combines all migrations (001-023) into a single script
 --
 -- Last Updated: 2026-02-10
 -- Pricing: Essential PKR 25K (5 ppl, 500 tasks/mo, 5K msgs) | Pro PKR 50K (8 ppl, 1K tasks/mo, 12K msgs) | Max PKR 100K (15 ppl, 2K tasks/mo, 25K msgs)
@@ -564,17 +564,25 @@ FROM households h;
 
 GRANT SELECT ON subscription_dashboard TO authenticated;
 
--- Admin cost dashboard function (from migration 019)
+-- Admin cost dashboard function (from migration 019, updated in 023 for real-time + PKT)
 CREATE OR REPLACE FUNCTION admin_cost_dashboard(admin_secret TEXT)
 RETURNS JSON AS $$
 DECLARE
   stored_secret TEXT;
   result JSON;
+  pkt_today DATE;
+  pkt_month_start DATE;
+  pkt_today_start TIMESTAMPTZ;
 BEGIN
   SELECT value INTO stored_secret FROM app_config WHERE key = 'admin_dashboard_secret';
   IF stored_secret IS NULL OR admin_secret IS DISTINCT FROM stored_secret THEN
     RETURN json_build_object('error', 'unauthorized', 'message', 'Invalid admin secret');
   END IF;
+
+  -- PKT date boundaries (UTC+5)
+  pkt_today := (NOW() AT TIME ZONE 'Asia/Karachi')::DATE;
+  pkt_month_start := date_trunc('month', pkt_today)::DATE;
+  pkt_today_start := (pkt_today::TEXT || ' 00:00:00+05:00')::TIMESTAMPTZ;
 
   WITH exchange AS (
     SELECT COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_exchange_rate_pkr_usd'), '')::DECIMAL, 278) as rate
@@ -586,6 +594,22 @@ BEGIN
       COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_openai_tts_per_char_usd'), '')::DECIMAL, 0.000015) as tts_char,
       COALESCE(NULLIF((SELECT value FROM app_config WHERE key = 'cost_openai_ai_call_usd'), '')::DECIMAL, 0.001) as ai_call
   ),
+  -- Today's real-time events (not yet aggregated into usage_daily)
+  today_events AS (
+    SELECT
+      household_id,
+      COUNT(*) FILTER (WHERE event_type = 'message_inbound') as msgs_in,
+      COUNT(*) FILTER (WHERE event_type = 'message_outbound') as msgs_out,
+      COUNT(*) FILTER (WHERE event_type = 'task_created') as tasks_created,
+      COUNT(*) FILTER (WHERE event_type = 'voice_note_inbound') as voice_in,
+      COUNT(*) FILTER (WHERE event_type = 'voice_note_outbound') as voice_out,
+      COUNT(*) FILTER (WHERE event_type IN ('ai_classification', 'ai_call')) as ai_calls,
+      COALESCE(SUM(COALESCE((details->>'duration_seconds')::DECIMAL, 0) / 60.0) FILTER (WHERE event_type = 'stt_transcription'), 0) as stt_minutes,
+      COALESCE(SUM(COALESCE((details->>'character_count')::INTEGER, 0)) FILTER (WHERE event_type = 'tts_generation'), 0) as tts_characters
+    FROM usage_events
+    WHERE created_at >= pkt_today_start
+    GROUP BY household_id
+  ),
   household_data AS (
     SELECT
       h.id, h.name, h.plan_tier, h.subscription_status, h.expected_monthly_amount,
@@ -593,27 +617,51 @@ BEGIN
       (SELECT COUNT(*) FROM members m WHERE m.household_id = h.id) as member_count,
       (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id) as staff_count,
       (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id AND s.voice_notes_enabled = true) as voice_staff_count,
-      COALESCE(SUM(ud.estimated_cost_usd), 0) as all_time_cost_usd,
-      COALESCE(SUM(ud.messages_inbound), 0) as all_time_msgs_in,
-      COALESCE(SUM(ud.messages_outbound), 0) as all_time_msgs_out,
-      COALESCE(SUM(ud.tasks_created), 0) as all_time_tasks,
-      COALESCE(SUM(ud.voice_notes_inbound), 0) as all_time_voice_in,
-      COALESCE(SUM(ud.voice_notes_outbound), 0) as all_time_voice_out,
-      COALESCE(SUM(ud.ai_calls), 0) as all_time_ai_calls,
-      COALESCE(SUM(ud.stt_minutes), 0) as all_time_stt_minutes,
-      COALESCE(SUM(ud.tts_characters), 0) as all_time_tts_characters,
-      COALESCE(SUM(ud.estimated_cost_usd) FILTER (WHERE ud.date >= date_trunc('month', CURRENT_DATE)::DATE), 0) as month_cost_usd,
-      COALESCE(SUM(ud.messages_inbound + ud.messages_outbound) FILTER (WHERE ud.date >= date_trunc('month', CURRENT_DATE)::DATE), 0) as month_messages,
-      COALESCE(SUM(ud.tasks_created) FILTER (WHERE ud.date >= date_trunc('month', CURRENT_DATE)::DATE), 0) as month_tasks,
-      COALESCE(SUM(ud.ai_calls) FILTER (WHERE ud.date >= date_trunc('month', CURRENT_DATE)::DATE), 0) as month_ai_calls,
-      COALESCE(SUM(ud.estimated_cost_usd) FILTER (WHERE ud.date >= CURRENT_DATE - 30), 0) as last_30d_cost_usd,
-      COALESCE(SUM(ud.messages_inbound + ud.messages_outbound + ud.voice_notes_inbound + ud.voice_notes_outbound), 0) * (SELECT twilio_msg FROM cost_rates) as breakdown_twilio,
-      COALESCE(SUM(ud.stt_minutes), 0) * (SELECT stt_min FROM cost_rates) as breakdown_stt,
-      COALESCE(SUM(ud.tts_characters), 0) * (SELECT tts_char FROM cost_rates) as breakdown_tts,
-      COALESCE(SUM(ud.ai_calls), 0) * (SELECT ai_call FROM cost_rates) as breakdown_ai
+      -- All-time: usage_daily + today's real-time events
+      COALESCE(SUM(ud.estimated_cost_usd), 0) + (
+        (COALESCE(te.msgs_in, 0) + COALESCE(te.msgs_out, 0) + COALESCE(te.voice_in, 0) + COALESCE(te.voice_out, 0)) * (SELECT twilio_msg FROM cost_rates) +
+        COALESCE(te.stt_minutes, 0) * (SELECT stt_min FROM cost_rates) +
+        COALESCE(te.tts_characters, 0) * (SELECT tts_char FROM cost_rates) +
+        COALESCE(te.ai_calls, 0) * (SELECT ai_call FROM cost_rates)
+      ) as all_time_cost_usd,
+      COALESCE(SUM(ud.messages_inbound), 0) + COALESCE(te.msgs_in, 0) as all_time_msgs_in,
+      COALESCE(SUM(ud.messages_outbound), 0) + COALESCE(te.msgs_out, 0) as all_time_msgs_out,
+      COALESCE(SUM(ud.tasks_created), 0) + COALESCE(te.tasks_created, 0) as all_time_tasks,
+      COALESCE(SUM(ud.voice_notes_inbound), 0) + COALESCE(te.voice_in, 0) as all_time_voice_in,
+      COALESCE(SUM(ud.voice_notes_outbound), 0) + COALESCE(te.voice_out, 0) as all_time_voice_out,
+      COALESCE(SUM(ud.ai_calls), 0) + COALESCE(te.ai_calls, 0) as all_time_ai_calls,
+      COALESCE(SUM(ud.stt_minutes), 0) + COALESCE(te.stt_minutes, 0) as all_time_stt_minutes,
+      COALESCE(SUM(ud.tts_characters), 0) + COALESCE(te.tts_characters, 0) as all_time_tts_characters,
+      -- Current month (PKT): usage_daily from month start + today's events
+      COALESCE(SUM(ud.estimated_cost_usd) FILTER (WHERE ud.date >= pkt_month_start), 0) + (
+        (COALESCE(te.msgs_in, 0) + COALESCE(te.msgs_out, 0) + COALESCE(te.voice_in, 0) + COALESCE(te.voice_out, 0)) * (SELECT twilio_msg FROM cost_rates) +
+        COALESCE(te.stt_minutes, 0) * (SELECT stt_min FROM cost_rates) +
+        COALESCE(te.tts_characters, 0) * (SELECT tts_char FROM cost_rates) +
+        COALESCE(te.ai_calls, 0) * (SELECT ai_call FROM cost_rates)
+      ) as month_cost_usd,
+      COALESCE(SUM(ud.messages_inbound + ud.messages_outbound) FILTER (WHERE ud.date >= pkt_month_start), 0) + COALESCE(te.msgs_in, 0) + COALESCE(te.msgs_out, 0) as month_messages,
+      COALESCE(SUM(ud.tasks_created) FILTER (WHERE ud.date >= pkt_month_start), 0) + COALESCE(te.tasks_created, 0) as month_tasks,
+      COALESCE(SUM(ud.ai_calls) FILTER (WHERE ud.date >= pkt_month_start), 0) + COALESCE(te.ai_calls, 0) as month_ai_calls,
+      COALESCE(SUM(ud.voice_notes_outbound) FILTER (WHERE ud.date >= pkt_month_start), 0) + COALESCE(te.voice_out, 0) as month_voice_notes,
+      -- Last 30 days (PKT)
+      COALESCE(SUM(ud.estimated_cost_usd) FILTER (WHERE ud.date >= pkt_today - 30), 0) + (
+        (COALESCE(te.msgs_in, 0) + COALESCE(te.msgs_out, 0) + COALESCE(te.voice_in, 0) + COALESCE(te.voice_out, 0)) * (SELECT twilio_msg FROM cost_rates) +
+        COALESCE(te.stt_minutes, 0) * (SELECT stt_min FROM cost_rates) +
+        COALESCE(te.tts_characters, 0) * (SELECT tts_char FROM cost_rates) +
+        COALESCE(te.ai_calls, 0) * (SELECT ai_call FROM cost_rates)
+      ) as last_30d_cost_usd,
+      -- Cost breakdown (all-time, including today)
+      (COALESCE(SUM(ud.messages_inbound + ud.messages_outbound + ud.voice_notes_inbound + ud.voice_notes_outbound), 0) + COALESCE(te.msgs_in, 0) + COALESCE(te.msgs_out, 0) + COALESCE(te.voice_in, 0) + COALESCE(te.voice_out, 0)) * (SELECT twilio_msg FROM cost_rates) as breakdown_twilio,
+      (COALESCE(SUM(ud.stt_minutes), 0) + COALESCE(te.stt_minutes, 0)) * (SELECT stt_min FROM cost_rates) as breakdown_stt,
+      (COALESCE(SUM(ud.tts_characters), 0) + COALESCE(te.tts_characters, 0)) * (SELECT tts_char FROM cost_rates) as breakdown_tts,
+      (COALESCE(SUM(ud.ai_calls), 0) + COALESCE(te.ai_calls, 0)) * (SELECT ai_call FROM cost_rates) as breakdown_ai
     FROM households h
     LEFT JOIN usage_daily ud ON ud.household_id = h.id
-    GROUP BY h.id, h.name, h.plan_tier, h.subscription_status, h.expected_monthly_amount, h.subscribed_at, h.created_at, h.city, h.country
+    LEFT JOIN today_events te ON te.household_id = h.id
+    GROUP BY h.id, h.name, h.plan_tier, h.subscription_status, h.expected_monthly_amount,
+             h.subscribed_at, h.created_at, h.city, h.country,
+             te.msgs_in, te.msgs_out, te.tasks_created, te.voice_in, te.voice_out,
+             te.ai_calls, te.stt_minutes, te.tts_characters
   )
   SELECT json_build_object(
     'success', true,
@@ -665,7 +713,8 @@ BEGIN
             'all_time_tts_characters', hd.all_time_tts_characters,
             'current_month_messages', hd.month_messages,
             'current_month_tasks', hd.month_tasks,
-            'current_month_ai_calls', hd.month_ai_calls
+            'current_month_ai_calls', hd.month_ai_calls,
+            'current_month_voice_notes', hd.month_voice_notes
           ),
           'cost_breakdown', json_build_object(
             'twilio_usd', ROUND(hd.breakdown_twilio::NUMERIC, 4),
