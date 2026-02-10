@@ -294,6 +294,15 @@
       return fmtMoney(usd, Number(usd || 0) * rate, opts);
     }
 
+    function fmtUsageCap(used, cap) {
+      const u = Number(used || 0);
+      const c = Number(cap || 0);
+      if (c <= 0) return u.toLocaleString();
+      const pct = u / c;
+      const color = pct >= 1 ? 'text-red-600' : pct >= 0.8 ? 'text-amber-600' : 'text-gray-900';
+      return `<span class="${color}">${u.toLocaleString()} / ${c.toLocaleString()}</span>`;
+    }
+
     function fmtRate(usd) {
       if (currentCurrency === 'usd') {
         return '$' + Number(usd || 0).toFixed(6);
@@ -542,13 +551,10 @@
                 <div>
                   <p class="font-semibold text-gray-500 uppercase tracking-wider mb-2">Usage (This Month)</p>
                   <div class="space-y-1 font-mono">
-                    <div class="flex justify-between"><span class="text-gray-500">Messages</span><span>${Number(usage.current_month_messages || 0).toLocaleString()}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Tasks</span><span>${Number(usage.current_month_tasks || 0).toLocaleString()}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Voice In (STT)</span><span>${Number(usage.current_month_voice_inbound || 0).toLocaleString()}</span></div>
-                    <div class="flex justify-between">
-                      <span class="text-gray-500">Voice Out (TTS)</span>
-                      <span>${Number(usage.current_month_voice_outbound || 0).toLocaleString()}${Number(usage.voice_outbound_cap || 0) > 0 ? ' / ' + Number(usage.voice_outbound_cap).toLocaleString() + ' <span class="text-amber-600 text-[10px] font-semibold">CAP</span>' : ''}</span>
-                    </div>
+                    <div class="flex justify-between"><span class="text-gray-500">Messages</span><span>${fmtUsageCap(usage.current_month_messages, usage.messages_cap)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Tasks</span><span>${fmtUsageCap(usage.current_month_tasks, usage.tasks_cap)}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Voice In</span><span>${Number(usage.current_month_voice_inbound || 0).toLocaleString()}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Voice Out</span><span>${fmtUsageCap(usage.current_month_voice_outbound, usage.voice_outbound_cap)}</span></div>
                     <div class="flex justify-between"><span class="text-gray-500">AI Calls</span><span>${Number(usage.current_month_ai_calls || 0).toLocaleString()}</span></div>
                   </div>
                   <p class="font-semibold text-gray-500 uppercase tracking-wider mt-3 mb-2">Info</p>

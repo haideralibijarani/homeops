@@ -57,7 +57,7 @@ BEGIN
     SELECT
       h.id, h.name, h.plan_tier, h.subscription_status, h.expected_monthly_amount,
       h.subscribed_at, h.created_at, h.city, h.country,
-      h.cap_voice_notes_per_month,
+      h.cap_voice_notes_per_month, h.cap_tasks_per_month, h.cap_messages_per_month,
       (SELECT COUNT(*) FROM members m WHERE m.household_id = h.id) as member_count,
       (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id) as staff_count,
       (SELECT COUNT(*) FROM staff s WHERE s.household_id = h.id AND s.voice_notes_enabled = true) as voice_staff_count,
@@ -104,7 +104,7 @@ BEGIN
     LEFT JOIN usage_daily ud ON ud.household_id = h.id
     LEFT JOIN today_events te ON te.household_id = h.id
     GROUP BY h.id, h.name, h.plan_tier, h.subscription_status, h.expected_monthly_amount,
-             h.subscribed_at, h.created_at, h.city, h.country, h.cap_voice_notes_per_month,
+             h.subscribed_at, h.created_at, h.city, h.country, h.cap_voice_notes_per_month, h.cap_tasks_per_month, h.cap_messages_per_month,
              te.msgs_in, te.msgs_out, te.tasks_created, te.voice_in, te.voice_out,
              te.ai_calls, te.stt_minutes, te.tts_characters
   )
@@ -162,7 +162,9 @@ BEGIN
             'current_month_ai_calls', hd.month_ai_calls,
             'current_month_voice_inbound', hd.month_voice_inbound,
             'current_month_voice_outbound', hd.month_voice_outbound,
-            'voice_outbound_cap', COALESCE(hd.cap_voice_notes_per_month, 0)
+            'voice_outbound_cap', COALESCE(hd.cap_voice_notes_per_month, 0),
+            'tasks_cap', COALESCE(hd.cap_tasks_per_month, 500),
+            'messages_cap', COALESCE(hd.cap_messages_per_month, 5000)
           ),
           'cost_breakdown', json_build_object(
             'twilio_usd', ROUND(hd.breakdown_twilio::NUMERIC, 4),
