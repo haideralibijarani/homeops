@@ -211,14 +211,14 @@
               </select>
             </div>
             <div>
-              <label for="ttsLanguageStaff" class="block text-sm font-medium text-gray-700 mb-1">
+              <label for="ttsLanguageStaff" id="ttsLanguageLabel" class="block text-sm font-medium text-gray-700 mb-1">
                 Default Staff Voice Note Language
               </label>
               <select id="ttsLanguageStaff" name="tts_language_staff"
                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white">
                 <option value="en" selected>English</option>
               </select>
-              <p class="text-xs text-gray-500 mt-1">Default language for staff voice notes. Override per staff member below.</p>
+              <p class="text-xs text-gray-500 mt-1" id="ttsLanguageHint">Default language for staff voice notes. Override per staff member below.</p>
             </div>
             <div>
               <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City *</label>
@@ -290,7 +290,7 @@
               </ul>
               <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500 space-y-1">
                 <p id="essentialVoiceAddon" class="font-medium text-gray-600">Voice notes: +PKR 7,000/staff/mo add-on</p>
-                <p>1,200 voice notes/mo pool shared across staff.</p>
+                <p id="essentialVoicePool">1,200 voice notes/mo pool shared across staff.</p>
               </div>
             </div>
 
@@ -331,7 +331,7 @@
                   Daily text digest
                 </li>
               </ul>
-              <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+              <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500" id="proVoicePool">
                 Voice pool shared across all staff
               </div>
             </div>
@@ -370,7 +370,7 @@
                   Daily text digest
                 </li>
               </ul>
-              <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+              <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500" id="maxVoicePool">
                 Voice pool shared across all staff
               </div>
             </div>
@@ -387,7 +387,7 @@
 
           <div class="bg-blue-50 rounded-lg p-4 border border-blue-100 mb-4">
             <p class="text-sm font-medium text-gray-700 mb-1">How voice notes work</p>
-            <p class="text-xs text-gray-600">Only voice notes <strong>sent by <span class="svc-brand">HomeOps</span> to staff</strong> count toward your pool. Voice notes <strong>you send to <span class="svc-brand">HomeOps</span></strong> don't count toward your voice pool &mdash; they only use your message allowance.</p>
+            <p class="text-xs text-gray-600" id="voiceExplanation">Only voice notes <strong>sent by <span class="svc-brand">HomeOps</span> to staff</strong> count toward your pool. Voice notes <strong>you send to <span class="svc-brand">HomeOps</span></strong> don't count toward your voice pool &mdash; they only use your message allowance.</p>
           </div>
 
           <p class="text-center text-xs text-gray-400">Cancel anytime. No contracts.</p>
@@ -743,6 +743,21 @@
         el.textContent = cfg.shortBrand;
       });
 
+      // Dynamic staff/employee labels in plan cards
+      var sl = cfg.staffLabel.toLowerCase();
+      document.getElementById('essentialVoicePool').textContent =
+        '1,200 voice notes/mo pool shared across ' + sl + '.';
+      document.getElementById('proVoicePool').textContent =
+        'Voice pool shared across all ' + sl;
+      document.getElementById('maxVoicePool').textContent =
+        'Voice pool shared across all ' + sl;
+      document.getElementById('voiceExplanation').innerHTML =
+        'Only voice notes <strong>sent by <span class="svc-brand">' + cfg.shortBrand + '</span> to ' + sl + '</strong> count toward your pool. Voice notes <strong>you send to <span class="svc-brand">' + cfg.shortBrand + '</span></strong> don\'t count toward your voice pool &mdash; they only use your message allowance.';
+      document.getElementById('ttsLanguageLabel').textContent =
+        'Default ' + cfg.staffLabel + ' Voice Note Language';
+      document.getElementById('ttsLanguageHint').textContent =
+        'Default language for ' + sl + ' voice notes. Override per ' + sl + ' member below.';
+
       // Currency
       if (cfg.showCurrencyPicker) {
         document.getElementById('currencyToggle').classList.remove('hidden');
@@ -780,13 +795,14 @@
       document.getElementById('proPrice').textContent = formatPrice(plans.pro.base);
       document.getElementById('maxPrice').textContent = formatPrice(plans.max.base);
 
+      var sl = getConfig().staffLabel.toLowerCase();
       document.getElementById('essentialVoiceAddon').textContent =
-        'Voice notes: +' + formatPrice(plans.essential.voice_addon_price) + '/staff/mo add-on';
+        'Voice notes: +' + formatPrice(plans.essential.voice_addon_price) + '/' + sl + '/mo add-on';
 
       document.getElementById('extraPersonInfo').innerHTML =
         'Extra people: <strong class="text-gray-700">+' + formatPrice(plans.essential.extra_person_price) + '/person/mo</strong>';
       document.getElementById('voiceAddonInfo').innerHTML =
-        'Voice add-on (Essential): <strong class="text-gray-700">+' + formatPrice(plans.essential.voice_addon_price) + '/staff/mo</strong>';
+        'Voice add-on (Essential): <strong class="text-gray-700">+' + formatPrice(plans.essential.voice_addon_price) + '/' + sl + '/mo</strong>';
     }
 
     // ============================================================
@@ -811,10 +827,11 @@
       }
 
       var voiceAddonInfo = document.getElementById('voiceAddonInfo');
+      var sl = getConfig().staffLabel.toLowerCase();
       if (plan.voice_included) {
         voiceAddonInfo.innerHTML = 'Voice notes: <strong class="text-brand-600">Included in your plan</strong>';
       } else {
-        voiceAddonInfo.innerHTML = 'Voice add-on (Essential only): <strong class="text-gray-700">+' + formatPrice(plan.voice_addon_price) + '/staff/mo</strong>';
+        voiceAddonInfo.innerHTML = 'Voice add-on (Essential only): <strong class="text-gray-700">+' + formatPrice(plan.voice_addon_price) + '/' + sl + '/mo</strong>';
       }
 
       document.getElementById('memberLimitText').textContent =
@@ -953,11 +970,12 @@
       }
 
       var voiceRow = document.getElementById('pricingVoiceRow');
+      var sl = getConfig().staffLabel.toLowerCase();
       if (plan.voice_included) {
         voiceRow.classList.remove('hidden');
         var label = staffMembers.length > 0
-          ? 'Voice notes for ' + staffMembers.length + ' staff (included)'
-          : 'Voice notes for all staff (included)';
+          ? 'Voice notes for ' + staffMembers.length + ' ' + sl + ' (included)'
+          : 'Voice notes for all ' + sl + ' (included)';
         document.getElementById('pricingVoiceLabel').innerHTML =
           '<span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> ' + label + '</span>';
         document.getElementById('pricingVoiceAmount').textContent = 'Included';
@@ -966,7 +984,7 @@
         if (voiceStaffCount > 0) {
           voiceRow.classList.remove('hidden');
           document.getElementById('pricingVoiceLabel').textContent =
-            'Voice add-on (' + voiceStaffCount + ' staff \u00d7 ' + formatPrice(plan.voice_addon_price) + ')';
+            'Voice add-on (' + voiceStaffCount + ' ' + sl + ' \u00d7 ' + formatPrice(plan.voice_addon_price) + ')';
           document.getElementById('pricingVoiceAmount').textContent = formatPrice(voiceTotal);
           document.getElementById('pricingVoiceAmount').className = 'font-medium';
         } else {
