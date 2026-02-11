@@ -667,6 +667,52 @@ CREATE TRIGGER trigger_check_subscription
   FOR EACH ROW
   EXECUTE FUNCTION check_subscription_status();
 
+-- Validate task assignee belongs to same account (trigger function)
+-- Ensures assignee_member_id or assignee_staff_id references a record in the same account
+CREATE OR REPLACE FUNCTION validate_task_assignee()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (NEW.assignee_type = 'member') THEN
+    IF NEW.assignee_member_id IS NULL THEN
+      RAISE EXCEPTION 'assignee_member_id is required when assignee_type = member';
+    END IF;
+    IF NEW.assignee_staff_id IS NOT NULL THEN
+      RAISE EXCEPTION 'assignee_staff_id must be NULL when assignee_type = member';
+    END IF;
+    IF NOT EXISTS (
+      SELECT 1 FROM public.members
+      WHERE id = NEW.assignee_member_id AND account_id = NEW.account_id
+    ) THEN
+      RAISE EXCEPTION 'assignee_member_id % does not reference a member in account %',
+        NEW.assignee_member_id, NEW.account_id;
+    END IF;
+  ELSIF (NEW.assignee_type = 'staff') THEN
+    IF NEW.assignee_staff_id IS NULL THEN
+      RAISE EXCEPTION 'assignee_staff_id is required when assignee_type = staff';
+    END IF;
+    IF NEW.assignee_member_id IS NOT NULL THEN
+      RAISE EXCEPTION 'assignee_member_id must be NULL when assignee_type = staff';
+    END IF;
+    IF NOT EXISTS (
+      SELECT 1 FROM public.staff
+      WHERE id = NEW.assignee_staff_id AND account_id = NEW.account_id
+    ) THEN
+      RAISE EXCEPTION 'assignee_staff_id % does not reference a staff in account %',
+        NEW.assignee_staff_id, NEW.account_id;
+    END IF;
+  ELSE
+    RAISE EXCEPTION 'invalid assignee_type: %', NEW.assignee_type;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS tasks_validate_assignee_trigger ON tasks;
+CREATE TRIGGER tasks_validate_assignee_trigger
+  BEFORE INSERT OR UPDATE ON tasks
+  FOR EACH ROW
+  EXECUTE FUNCTION validate_task_assignee();
+
 -- Cleanup function for old messages (from migration 021)
 CREATE OR REPLACE FUNCTION cleanup_old_messages()
 RETURNS INTEGER AS $$
@@ -1159,6 +1205,7 @@ COMMENT ON FUNCTION calculate_expected_amount IS 'Calculate expected monthly pay
 COMMENT ON FUNCTION recalculate_and_store_expected_amount IS 'Calculate and persist expected_monthly_amount on accounts table';
 COMMENT ON FUNCTION admin_cost_dashboard IS 'Password-protected admin dashboard returning account cost/profitability data with service_type and currency support';
 COMMENT ON FUNCTION admin_daily_usage IS 'Password-protected daily usage breakdown with service_type support';
+COMMENT ON FUNCTION validate_task_assignee IS 'Trigger: validates assignee belongs to same account on task INSERT/UPDATE';
 COMMENT ON FUNCTION get_due_reminders IS 'Get scheduled reminders whose fire time has arrived (limit 50)';
 COMMENT ON FUNCTION get_unacked_reminders IS 'Get sent one-time reminders needing follow-up nudges (limit 50)';
 

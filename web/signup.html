@@ -386,8 +386,13 @@
           </div>
 
           <div class="bg-blue-50 rounded-lg p-4 border border-blue-100 mb-4">
-            <p class="text-sm font-medium text-gray-700 mb-1">How voice notes work</p>
-            <p class="text-xs text-gray-600" id="voiceExplanation">Only voice notes <strong>sent by <span class="svc-brand">HomeOps</span> to staff</strong> count toward your pool. Voice notes <strong>you send to <span class="svc-brand">HomeOps</span></strong> don't count toward your voice pool &mdash; they only use your message allowance.</p>
+            <p class="text-sm font-medium text-gray-700 mb-2">Usage & Limits</p>
+            <div class="text-xs text-gray-600 space-y-1.5">
+              <p><strong>Messages:</strong> Every WhatsApp message counts &mdash; both what you send and what <span class="svc-brand">HomeOps</span> replies. A single task typically uses 2&ndash;4 messages (your request + confirmations).</p>
+              <p><strong>Tasks:</strong> Each task created counts toward your limit, permanently. Cancelling or updating a task does <em>not</em> free up usage.</p>
+              <p><strong>Reminders:</strong> Creating a reminder counts as 1 task. When it fires, each notification counts as a message.</p>
+              <p><strong>Voice Notes:</strong> Only voice notes <em>sent by <span class="svc-brand">HomeOps</span></em> to <span class="svc-workers">staff</span> count toward your voice pool. Voice messages <em>you send</em> to <span class="svc-brand">HomeOps</span> use your message allowance only.</p>
+            </div>
           </div>
 
           <p class="text-center text-xs text-gray-400">Cancel anytime. No contracts.</p>
@@ -495,6 +500,15 @@
           </div>
         </div>
       </form>
+
+      <!-- Example Scenarios -->
+      <section id="examplesSection" class="mt-12 mb-8">
+        <div class="text-center mb-8">
+          <h2 class="text-2xl font-bold text-gray-900 mb-2" id="examplesTitle">See What You Can Do</h2>
+          <p class="text-gray-500 text-sm max-w-lg mx-auto" id="examplesSubtitle">Real examples of how households use HomeOps every day &mdash; just send a WhatsApp message</p>
+        </div>
+        <div id="examplesGrid" class="grid gap-3 sm:grid-cols-2"></div>
+      </section>
     </main>
 
     <footer class="border-t border-gray-200 mt-16">
@@ -753,8 +767,9 @@
         'Voice pool shared across all ' + sl;
       document.getElementById('maxVoicePool').textContent =
         'Voice pool shared across all ' + sl;
-      document.getElementById('voiceExplanation').innerHTML =
-        'Only voice notes <strong>sent by <span class="svc-brand">' + cfg.shortBrand + '</span> to ' + sl + '</strong> count toward your pool. Voice notes <strong>you send to <span class="svc-brand">' + cfg.shortBrand + '</span></strong> don\'t count toward your voice pool &mdash; they only use your message allowance.';
+      document.querySelectorAll('.svc-workers').forEach(function(el) {
+        el.textContent = sl;
+      });
       var ss = cfg.staffLabelSingular;
       document.getElementById('ttsLanguageLabel').textContent =
         'Default ' + ss.charAt(0).toUpperCase() + ss.slice(1) + ' Voice Note Language';
@@ -774,6 +789,7 @@
 
       updatePlanCardPrices();
       selectPlan('pro');
+      renderExamples();
     }
 
     // ============================================================
@@ -1390,6 +1406,65 @@
         COUNTRIES.map(function(c) {
           return '<option value="' + c + '"' + (c === 'Pakistan' ? ' selected' : '') + '>' + c + '</option>';
         }).join('');
+    }
+
+    // ============================================================
+    // Example Scenarios
+    // ============================================================
+    const EXAMPLES = {
+      homeops: [
+        { msg: 'Tell Rahim to clean the guest room before 3pm', tag: 'Task Assignment' },
+        { msg: 'What\u2019s everyone working on today?', tag: 'Task Overview' },
+        { msg: 'The driver should pick up kids from school at 2pm', tag: 'Daily Coordination' },
+        { msg: 'Remind me to pay the electricity bill tomorrow', tag: 'Personal Reminder' },
+        { msg: 'Mark the grocery shopping as done', tag: 'Task Completion' },
+        { msg: 'The washing machine is leaking, tell maintenance', tag: 'Problem Reporting' },
+        { msg: 'Cancel tonight\u2019s dinner prep task', tag: 'Task Cancellation' },
+        { msg: 'Add Naseem as our new gardener', tag: 'Staff Management' },
+        { msg: 'What did the cook finish this week?', tag: 'Staff Tracking' },
+        { msg: 'Change Ahmed\u2019s voice notes to Urdu', tag: 'Language Settings' },
+        { msg: 'Remind Fatima about her dentist appointment at 4pm', tag: 'Family Reminder' },
+        { msg: 'Update the market task \u2014 also get fruits', tag: 'Task Update' },
+        { msg: 'Tell all staff: guests arriving at 7pm tonight', tag: 'Multi-Person Alert' },
+        { msg: 'Show me this month\u2019s usage', tag: 'Usage Report' },
+        { msg: 'Ok', tag: 'Quick Acknowledgment' }
+      ],
+      bizops: [
+        { msg: 'Assign the client proposal to Sarah, due Friday', tag: 'Deadline Assignment' },
+        { msg: 'What\u2019s pending for the operations team?', tag: 'Team Overview' },
+        { msg: 'Tell Ahmed to prepare the quarterly report by EOD', tag: 'Time-Sensitive Task' },
+        { msg: 'Remind me to follow up with the vendor at 2pm', tag: 'Business Reminder' },
+        { msg: 'Mark the inventory audit as complete', tag: 'Task Completion' },
+        { msg: 'The office AC isn\u2019t working, assign facilities', tag: 'Issue Routing' },
+        { msg: 'Cancel the meeting room booking task', tag: 'Task Cancellation' },
+        { msg: 'Add Zara as Operations Coordinator', tag: 'Team Onboarding' },
+        { msg: 'Who hasn\u2019t acknowledged their tasks today?', tag: 'Accountability' },
+        { msg: 'Change Bilal\u2019s voice notes to Arabic', tag: 'Language Settings' },
+        { msg: 'Remind the team: submit timesheets by Friday 5pm', tag: 'Team Reminder' },
+        { msg: 'Update the delivery task \u2014 change to Clifton branch', tag: 'Task Update' },
+        { msg: 'Tell all employees: office closes early at 3pm', tag: 'Company Announcement' },
+        { msg: 'Show me this month\u2019s usage report', tag: 'Usage Report' },
+        { msg: 'Theek hai', tag: 'Quick Acknowledgment' }
+      ]
+    };
+
+    function renderExamples() {
+      var examples = EXAMPLES[serviceType] || EXAMPLES.homeops;
+      var cfg = getConfig();
+
+      document.getElementById('examplesTitle').textContent = 'See What You Can Do';
+      document.getElementById('examplesSubtitle').innerHTML = serviceType === 'bizops'
+        ? 'Real examples of how teams use <strong>BizOps</strong> every day &mdash; just send a WhatsApp message'
+        : 'Real examples of how households use <strong>HomeOps</strong> every day &mdash; just send a WhatsApp message';
+
+      var grid = document.getElementById('examplesGrid');
+      grid.innerHTML = examples.map(function(ex, i) {
+        return '<div class="flex gap-3 p-3 bg-white rounded-lg border border-gray-100 hover:border-brand-200 transition">' +
+          '<div class="w-7 h-7 bg-brand-50 rounded-full flex items-center justify-center shrink-0 mt-0.5">' +
+          '<span class="text-brand-600 text-xs font-bold">' + (i + 1) + '</span></div>' +
+          '<div><p class="text-sm text-gray-800">\u201c' + ex.msg + '\u201d</p>' +
+          '<p class="text-xs text-brand-600 font-medium mt-0.5">' + ex.tag + '</p></div></div>';
+      }).join('');
     }
 
     // ============================================================
