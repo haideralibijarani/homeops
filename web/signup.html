@@ -516,6 +516,7 @@
         entityNameLower: 'household',
         familyLabel: 'Family',
         staffLabel: 'Staff',
+        staffLabelSingular: 'staff',
         namePlaceholder: 'e.g., The Khan Family',
         tagline: 'Household Operations Assistant',
         marketingTitle: 'One message. Everyone knows what to do.',
@@ -531,7 +532,8 @@
         entityName: 'Organization',
         entityNameLower: 'organization',
         familyLabel: 'Team Member',
-        staffLabel: 'Employee',
+        staffLabel: 'Employees',
+        staffLabelSingular: 'employee',
         namePlaceholder: 'e.g., Vertex Solutions',
         tagline: 'Business Operations Assistant',
         marketingTitle: 'One message. Your team gets it done.',
@@ -753,10 +755,11 @@
         'Voice pool shared across all ' + sl;
       document.getElementById('voiceExplanation').innerHTML =
         'Only voice notes <strong>sent by <span class="svc-brand">' + cfg.shortBrand + '</span> to ' + sl + '</strong> count toward your pool. Voice notes <strong>you send to <span class="svc-brand">' + cfg.shortBrand + '</span></strong> don\'t count toward your voice pool &mdash; they only use your message allowance.';
+      var ss = cfg.staffLabelSingular;
       document.getElementById('ttsLanguageLabel').textContent =
-        'Default ' + cfg.staffLabel + ' Voice Note Language';
+        'Default ' + ss.charAt(0).toUpperCase() + ss.slice(1) + ' Voice Note Language';
       document.getElementById('ttsLanguageHint').textContent =
-        'Default language for ' + sl + ' voice notes. Override per ' + sl + ' member below.';
+        'Default language for ' + sl + ' voice notes. Override per ' + ss + ' below.';
 
       // Currency
       if (cfg.showCurrencyPicker) {
@@ -795,14 +798,14 @@
       document.getElementById('proPrice').textContent = formatPrice(plans.pro.base);
       document.getElementById('maxPrice').textContent = formatPrice(plans.max.base);
 
-      var sl = getConfig().staffLabel.toLowerCase();
+      var ss = getConfig().staffLabelSingular;
       document.getElementById('essentialVoiceAddon').textContent =
-        'Voice notes: +' + formatPrice(plans.essential.voice_addon_price) + '/' + sl + '/mo add-on';
+        'Voice notes: +' + formatPrice(plans.essential.voice_addon_price) + '/' + ss + '/mo add-on';
 
       document.getElementById('extraPersonInfo').innerHTML =
         'Extra people: <strong class="text-gray-700">+' + formatPrice(plans.essential.extra_person_price) + '/person/mo</strong>';
       document.getElementById('voiceAddonInfo').innerHTML =
-        'Voice add-on (Essential): <strong class="text-gray-700">+' + formatPrice(plans.essential.voice_addon_price) + '/' + sl + '/mo</strong>';
+        'Voice add-on (Essential): <strong class="text-gray-700">+' + formatPrice(plans.essential.voice_addon_price) + '/' + ss + '/mo</strong>';
     }
 
     // ============================================================
@@ -827,11 +830,11 @@
       }
 
       var voiceAddonInfo = document.getElementById('voiceAddonInfo');
-      var sl = getConfig().staffLabel.toLowerCase();
+      var ss = getConfig().staffLabelSingular;
       if (plan.voice_included) {
         voiceAddonInfo.innerHTML = 'Voice notes: <strong class="text-brand-600">Included in your plan</strong>';
       } else {
-        voiceAddonInfo.innerHTML = 'Voice add-on (Essential only): <strong class="text-gray-700">+' + formatPrice(plan.voice_addon_price) + '/' + sl + '/mo</strong>';
+        voiceAddonInfo.innerHTML = 'Voice add-on (Essential only): <strong class="text-gray-700">+' + formatPrice(plan.voice_addon_price) + '/' + ss + '/mo</strong>';
       }
 
       document.getElementById('memberLimitText').textContent =
@@ -971,10 +974,11 @@
 
       var voiceRow = document.getElementById('pricingVoiceRow');
       var sl = getConfig().staffLabel.toLowerCase();
+      var ss = getConfig().staffLabelSingular;
       if (plan.voice_included) {
         voiceRow.classList.remove('hidden');
         var label = staffMembers.length > 0
-          ? 'Voice notes for ' + staffMembers.length + ' ' + sl + ' (included)'
+          ? 'Voice notes for ' + staffMembers.length + ' ' + (staffMembers.length === 1 ? ss : sl) + ' (included)'
           : 'Voice notes for all ' + sl + ' (included)';
         document.getElementById('pricingVoiceLabel').innerHTML =
           '<span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> ' + label + '</span>';
@@ -984,7 +988,7 @@
         if (voiceStaffCount > 0) {
           voiceRow.classList.remove('hidden');
           document.getElementById('pricingVoiceLabel').textContent =
-            'Voice add-on (' + voiceStaffCount + ' ' + sl + ' \u00d7 ' + formatPrice(plan.voice_addon_price) + ')';
+            'Voice add-on (' + voiceStaffCount + ' ' + (voiceStaffCount === 1 ? ss : sl) + ' \u00d7 ' + formatPrice(plan.voice_addon_price) + ')';
           document.getElementById('pricingVoiceAmount').textContent = formatPrice(voiceTotal);
           document.getElementById('pricingVoiceAmount').className = 'font-medium';
         } else {
@@ -1026,7 +1030,7 @@
       });
 
       var familyLabel = cfg.familyLabel;
-      var staffLabel = cfg.staffLabel;
+      var staffLabel = cfg.staffLabelSingular.charAt(0).toUpperCase() + cfg.staffLabelSingular.slice(1);
 
       var memberHtml = '<div class="member-item border border-gray-200 rounded-lg p-4" data-member-id="' + memberId + '">' +
         '<div class="flex items-center justify-between mb-3">' +
@@ -1151,7 +1155,7 @@
       if (memberCountNum > 0) text += memberCountNum + ' ' + cfg.familyLabel.toLowerCase();
       if (staffCount > 0) {
         if (text) text += ', ';
-        text += staffCount + ' ' + cfg.staffLabel.toLowerCase();
+        text += staffCount + ' ' + (staffCount === 1 ? cfg.staffLabelSingular : cfg.staffLabel.toLowerCase());
       }
       if (!text) text = '0 people';
 
