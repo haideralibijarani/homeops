@@ -1565,6 +1565,7 @@
         {
           title: 'The Language Barrier, Solved',
           flow: 'Voice Note in Urdu \u2192 English Translation \u2192 Update \u2192 Complete',
+          open: true,
           highlight: 'Your cook can\u2019t read or write English \u2014 and he doesn\u2019t need to. He spoke naturally in Urdu, and you received a polished English message. No apps to install, no training required. Just WhatsApp voice notes in their own language. This is how you manage a household where every staff member stays connected, regardless of literacy or language.',
           messages: [
             { type: 'sent', sender: 'You', text: 'Tell the cook to prepare dinner for 8 guests tonight, make something special' },
@@ -1579,6 +1580,44 @@
             { type: 'received', sender: 'HomeOps', text: 'Ahmed confirms:\n\u201cHeading to market now. Karahi, biryani, raita, salad, and kheer \u2014 everything will be ready by 8:30pm.\u201d' },
             { type: 'system', text: 'Ahmed completed the task at 8:25 PM' },
             { type: 'received', sender: 'HomeOps', text: '\u2705 Task completed: Prepare special dinner for 8 guests\nCompleted by Ahmed (Cook)' }
+          ]
+        },
+        {
+          title: 'One Voice Note, Everyone Moves',
+          flow: 'Voice Input \u2192 5 Tasks \u2192 Coordinate \u2192 Problem \u2192 Resolve \u2192 Complete \u2192 Usage',
+          open: true,
+          highlight: 'One 45-second voice note. Five people mobilized instantly. Tasks created, assigned, tracked, and completed \u2014 all without typing a single word. Problems handled in real time, staff responded in their own language, and you got a full usage summary at the end of the day. This is not a to-do app. This is a household command center.',
+          messages: [
+            { type: 'system', text: 'You sent a 45-second voice note' },
+            { type: 'sent', sender: 'You', text: '\ud83c\udfa4 Voice Note:\n\u201cSana, clean the guest bedroom and also iron the curtains in the lounge. Imran, pick up the dry cleaning from Blue Area and then get petrol. Ahmed, I need dinner for 12 people tonight \u2014 make mutton karahi and biryani. Ali, fix the leaking tap in the upstairs bathroom.\u201d' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 5 tasks created from your voice note:\n\n1. Clean guest bedroom \u2014 Sana (Maid)\n2. Iron lounge curtains \u2014 Sana (Maid)\n3. Pick up dry cleaning from Blue Area + get petrol \u2014 Imran (Driver)\n4. Prepare dinner for 12 (mutton karahi & biryani) \u2014 Ahmed (Cook)\n5. Fix leaking tap (upstairs bathroom) \u2014 Ali (Maintenance)\n\nAll assigned. Notifications sent.' },
+            { type: 'system', text: 'Sana, Imran, Ahmed, and Ali each received a voice note in Urdu' },
+            { type: 'system', text: 'Sana acknowledged both tasks' },
+            { type: 'received', sender: 'HomeOps', text: 'Sana acknowledged:\n\u2714 Clean guest bedroom\n\u2714 Iron lounge curtains' },
+            { type: 'system', text: 'Imran acknowledged' },
+            { type: 'received', sender: 'HomeOps', text: 'Imran acknowledged: Pick up dry cleaning + get petrol \u2714' },
+            { type: 'system', text: 'Ali acknowledged' },
+            { type: 'received', sender: 'HomeOps', text: 'Ali acknowledged: Fix leaking tap \u2714' },
+            { type: 'system', text: 'Ahmed replied with a voice note in Urdu' },
+            { type: 'received', sender: 'HomeOps', text: 'Ahmed (Cook) says:\n\u201cSir, we don\u2019t have enough mutton at home. I\u2019ll need to send someone to the market, or should I make chicken karahi instead? Biryani I can start right away.\u201d' },
+            { type: 'sent', sender: 'You', text: 'Tell Imran to pick up 3kg mutton from the butcher after the dry cleaning. Ahmed should start the biryani now.' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Task updated: Imran\u2019s route now includes butcher stop (3kg mutton)\n\u2705 Ahmed notified to start biryani immediately.' },
+            { type: 'system', text: 'Sana completed: Clean guest bedroom' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Sana completed: Clean guest bedroom' },
+            { type: 'system', text: 'Imran completed: Dry cleaning + petrol + mutton pickup' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Imran completed: Dry cleaning, petrol, and mutton delivered to Ahmed' },
+            { type: 'system', text: 'Ali replied with a voice note in Urdu' },
+            { type: 'received', sender: 'HomeOps', text: '\u26a0\ufe0f Problem reported by Ali (Maintenance):\n\u201cThe tap needs a new washer. I\u2019ve stopped the leak temporarily but need to buy the part from the hardware store.\u201d' },
+            { type: 'sent', sender: 'You', text: 'Tell Imran to take Ali to the hardware store since he\u2019s already out' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Imran notified: Take Ali to hardware store for tap washer.' },
+            { type: 'system', text: 'Sana completed: Iron lounge curtains' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Sana completed: Iron lounge curtains' },
+            { type: 'system', text: 'Ali completed: Fix leaking tap' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Ali completed: Leaking tap fixed (new washer installed)' },
+            { type: 'system', text: 'Ahmed completed: Dinner for 12' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Ahmed completed: Dinner ready \u2014 mutton karahi & biryani for 12' },
+            { type: 'system', text: '\ud83d\udcc5 Daily Summary \u2014 9:00 PM' },
+            { type: 'received', sender: 'HomeOps', text: '\ud83d\udcca Today\u2019s Summary:\n\n\u2705 5/5 tasks completed\n\ud83d\udc64 4 staff members active today\n\u26a0\ufe0f 1 problem reported & resolved\n\n\ud83d\udce8 Messages used today: 34\n\ud83d\udcdd Tasks created this month: 127 / 1,000\n\ud83d\udce9 Messages this month: 2,841 / 12,000\n\ud83c\udf99\ufe0f Voice notes this month: 312 / 2,500\n\n\ud83c\udfe0 Plan: Pro \u2022 8 people \u2022 Renews Mar 1' }
           ]
         }
       ],
@@ -1626,6 +1665,7 @@
         {
           title: 'Multilingual Team, Zero Friction',
           flow: 'Voice Note in Spanish \u2192 English Translation \u2192 Update \u2192 Complete',
+          open: true,
           highlight: 'Carlos was on the warehouse floor \u2014 no time to sit and type emails. He spoke in Spanish, you read it in English. No translators, no miscommunication, no delays. Your multilingual team operates as if everyone speaks the same language. This is how global businesses run with BizOps.',
           messages: [
             { type: 'sent', sender: 'You', text: 'Tell Carlos to finish the warehouse inventory count by end of day' },
@@ -1640,6 +1680,44 @@
             { type: 'received', sender: 'BizOps', text: 'Carlos confirms:\n\u201cSection B flagged. Photographing Section D damage now. Full count will be done by 5:30.\u201d' },
             { type: 'system', text: 'Carlos completed the task at 5:28 PM' },
             { type: 'received', sender: 'BizOps', text: '\u2705 Task completed: Warehouse inventory count\nSection B: flagged (\u221220 units). Section D: 12 packages logged.\nCompleted by Carlos' }
+          ]
+        },
+        {
+          title: 'One Voice Note, Full Team Mobilized',
+          flow: 'Voice Input \u2192 5 Tasks \u2192 Coordinate \u2192 Problem \u2192 Resolve \u2192 Complete \u2192 Usage',
+          open: true,
+          highlight: 'One 40-second voice note before your morning coffee. Five employees across three departments, all moving within seconds. A problem surfaced, got rerouted, and resolved \u2014 without a single email thread or meeting. By end of day, every task was done and you had a full operational snapshot. This is not project management. This is operational command.',
+          messages: [
+            { type: 'system', text: 'You sent a 40-second voice note' },
+            { type: 'sent', sender: 'You', text: '\ud83c\udfa4 Voice Note:\n\u201cSarah, finalize the Q1 investor deck by noon. Marcus, I need the updated sales pipeline numbers before Sarah\u2019s deck is done. Elena, schedule client onboarding calls for next week \u2014 priority accounts first. James, the VPN has been dropping for remote staff, fix it today. Sofia, draft the new vendor contract for the logistics partner.\u201d' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 5 tasks created from your voice note:\n\n1. Finalize Q1 investor deck \u2014 Sarah (Finance), Due: 12:00 PM\n2. Updated sales pipeline numbers \u2014 Marcus (Sales), Due: 11:00 AM\n3. Schedule priority client onboarding calls \u2014 Elena (Ops)\n4. Fix VPN for remote staff \u2014 James (IT), Due: Today\n5. Draft vendor contract (logistics partner) \u2014 Sofia (Legal)\n\nAll assigned. Notifications sent.' },
+            { type: 'system', text: 'All 5 employees notified instantly' },
+            { type: 'system', text: 'Marcus acknowledged' },
+            { type: 'received', sender: 'BizOps', text: 'Marcus acknowledged: Sales pipeline numbers \u2714' },
+            { type: 'system', text: 'Elena acknowledged' },
+            { type: 'received', sender: 'BizOps', text: 'Elena acknowledged: Client onboarding calls \u2714' },
+            { type: 'system', text: 'James acknowledged' },
+            { type: 'received', sender: 'BizOps', text: 'James acknowledged: Fix VPN \u2714' },
+            { type: 'system', text: 'Sofia acknowledged' },
+            { type: 'received', sender: 'BizOps', text: 'Sofia acknowledged: Draft vendor contract \u2714' },
+            { type: 'system', text: 'Sarah acknowledged' },
+            { type: 'received', sender: 'BizOps', text: 'Sarah acknowledged: Q1 investor deck \u2714' },
+            { type: 'system', text: 'James reported a problem' },
+            { type: 'received', sender: 'BizOps', text: '\u26a0\ufe0f Problem reported by James (IT):\n\u201cThe VPN issue is on the provider\u2019s end. I\u2019ve opened a ticket with them but ETA is 2\u20133 hours. I can set up a temporary hotfix in the meantime.\u201d' },
+            { type: 'sent', sender: 'You', text: 'Yes, set up the temporary fix now and follow up with the provider' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Task updated. James notified: Deploy temporary fix + follow up with provider.' },
+            { type: 'system', text: 'Marcus completed: Sales pipeline numbers (10:48 AM)' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Marcus completed: Sales pipeline numbers sent to Sarah' },
+            { type: 'system', text: 'Sarah completed: Q1 investor deck (11:55 AM)' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Sarah completed: Q1 investor deck finalized with latest pipeline data' },
+            { type: 'system', text: 'Elena completed: Client onboarding calls scheduled' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Elena completed: 8 onboarding calls scheduled for next week (priority accounts first)' },
+            { type: 'system', text: 'James completed: VPN fixed' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 James completed: Temporary fix deployed, provider resolved root cause. VPN stable.' },
+            { type: 'system', text: 'Sofia completed: Vendor contract drafted' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Sofia completed: Logistics vendor contract drafted and sent for review' },
+            { type: 'system', text: '\ud83d\udcc5 Daily Summary \u2014 6:00 PM' },
+            { type: 'received', sender: 'BizOps', text: '\ud83d\udcca Today\u2019s Summary:\n\n\u2705 5/5 tasks completed\n\ud83d\udc64 5 employees active today\n\u26a0\ufe0f 1 issue reported & resolved\n\n\ud83d\udce8 Messages used today: 38\n\ud83d\udcdd Tasks created this month: 89 / 1,000\n\ud83d\udce9 Messages this month: 1,672 / 12,000\n\ud83c\udf99\ufe0f Voice notes this month: 0 / 2,500\n\n\ud83c\udfe2 Plan: Pro \u2022 8 people \u2022 Renews Mar 1' }
           ]
         }
       ]
@@ -1677,7 +1755,7 @@
             '<p class="text-xs text-brand-700 leading-relaxed">' + sim.highlight + '</p></div>'
           : '';
 
-        return '<details class="bg-white rounded-xl border border-gray-200 overflow-hidden"' + (sim.highlight ? ' open' : '') + '>' +
+        return '<details class="bg-white rounded-xl border border-gray-200 overflow-hidden"' + (sim.open ? ' open' : '') + '>' +
           '<summary class="p-4 cursor-pointer hover:bg-gray-50 transition flex items-center justify-between gap-3">' +
           '<div class="flex items-center gap-3 min-w-0">' +
           '<div class="w-8 h-8 bg-brand-50 rounded-full flex items-center justify-center shrink-0">' +
