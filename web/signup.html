@@ -128,6 +128,9 @@
     <header class="bg-white border-b border-gray-200">
       <div class="max-w-4xl mx-auto px-4 py-4">
         <div class="flex items-center gap-3">
+          <button type="button" id="backToServiceBtn" onclick="goBackToServiceSelector()" class="hidden w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:border-gray-400 transition" title="Choose a different service">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
           <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center">
             <svg id="headerIconHome" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
@@ -214,10 +217,6 @@
               <select id="ttsLanguageStaff" name="tts_language_staff"
                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white">
                 <option value="en" selected>English</option>
-                <option value="ur">Urdu</option>
-                <option value="hi">Hindi</option>
-                <option value="ar">Arabic</option>
-                <option value="fr">French</option>
               </select>
               <p class="text-xs text-gray-500 mt-1">Default language for staff voice notes. Override per staff member below.</p>
             </div>
@@ -231,15 +230,7 @@
               <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Country *</label>
               <select id="country" name="country" required
                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white">
-                <option value="Pakistan" selected>Pakistan</option>
-                <option value="UAE">UAE</option>
-                <option value="Saudi Arabia">Saudi Arabia</option>
-                <option value="India">India</option>
-                <option value="France">France</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="United States">United States</option>
-                <option value="Canada">Canada</option>
-                <option value="Other">Other</option>
+                <option value="">Select country</option>
               </select>
             </div>
           </div>
@@ -530,7 +521,9 @@
         marketingTitle: 'One message. Everyone knows what to do.',
         marketingSubtitle: 'Save 2+ hours/day on household coordination. The cost of one staff member \u2014 coordinates all of them.',
         defaultCurrency: 'PKR',
-        showCurrencyPicker: false
+        showCurrencyPicker: false,
+        showMemberTitle: false,
+        staffTitlePlaceholder: 'Job Title (e.g., Driver, Cook, Maid, Gardener)'
       },
       bizops: {
         brand: 'BizOps by MYNK',
@@ -544,7 +537,10 @@
         marketingTitle: 'One message. Your team gets it done.',
         marketingSubtitle: 'Save hours/day on team coordination. Manage your entire operation via WhatsApp.',
         defaultCurrency: null,
-        showCurrencyPicker: true
+        showCurrencyPicker: true,
+        showMemberTitle: true,
+        memberTitlePlaceholder: 'Job Title (e.g., Director, Analyst, Coordinator)',
+        staffTitlePlaceholder: 'Job Title (e.g., Supervisor, Assistant, Manager)'
       }
     };
 
@@ -562,6 +558,97 @@
       pro: { name: 'Pro', base: 179, included_people: 8, tasks_per_month: 1000, messages_per_month: 12000, voice_pool: 2500, voice_included: true, extra_person_price: 19, voice_addon_price: 0 },
       max: { name: 'Max', base: 349, included_people: 15, tasks_per_month: 2000, messages_per_month: 25000, voice_pool: 6000, voice_included: true, extra_person_price: 19, voice_addon_price: 0 }
     };
+
+    // ============================================================
+    // Languages (for TTS voice notes)
+    // ============================================================
+    const LANGUAGES = [
+      { value: 'en', label: 'English' },
+      { value: 'ur', label: 'Urdu' },
+      { value: 'hi', label: 'Hindi' },
+      { value: 'ar', label: 'Arabic' },
+      { value: 'fr', label: 'French' },
+      { value: 'es', label: 'Spanish' },
+      { value: 'pt', label: 'Portuguese' },
+      { value: 'de', label: 'German' },
+      { value: 'it', label: 'Italian' },
+      { value: 'nl', label: 'Dutch' },
+      { value: 'ru', label: 'Russian' },
+      { value: 'ja', label: 'Japanese' },
+      { value: 'ko', label: 'Korean' },
+      { value: 'zh', label: 'Chinese (Mandarin)' },
+      { value: 'tr', label: 'Turkish' },
+      { value: 'pl', label: 'Polish' },
+      { value: 'sv', label: 'Swedish' },
+      { value: 'da', label: 'Danish' },
+      { value: 'no', label: 'Norwegian' },
+      { value: 'fi', label: 'Finnish' },
+      { value: 'th', label: 'Thai' },
+      { value: 'vi', label: 'Vietnamese' },
+      { value: 'id', label: 'Indonesian' },
+      { value: 'ms', label: 'Malay' },
+      { value: 'tl', label: 'Filipino' },
+      { value: 'bn', label: 'Bengali' },
+      { value: 'ta', label: 'Tamil' },
+      { value: 'te', label: 'Telugu' },
+      { value: 'pa', label: 'Punjabi' },
+      { value: 'mr', label: 'Marathi' },
+      { value: 'gu', label: 'Gujarati' },
+      { value: 'kn', label: 'Kannada' },
+      { value: 'ml', label: 'Malayalam' },
+      { value: 'sw', label: 'Swahili' },
+      { value: 'fa', label: 'Persian (Farsi)' },
+      { value: 'he', label: 'Hebrew' },
+      { value: 'uk', label: 'Ukrainian' },
+      { value: 'ro', label: 'Romanian' },
+      { value: 'cs', label: 'Czech' },
+      { value: 'el', label: 'Greek' },
+      { value: 'hu', label: 'Hungarian' },
+      { value: 'bg', label: 'Bulgarian' },
+      { value: 'sr', label: 'Serbian' },
+      { value: 'hr', label: 'Croatian' },
+      { value: 'sk', label: 'Slovak' },
+      { value: 'lt', label: 'Lithuanian' },
+      { value: 'lv', label: 'Latvian' },
+      { value: 'et', label: 'Estonian' },
+      { value: 'sl', label: 'Slovenian' },
+      { value: 'my', label: 'Burmese' },
+      { value: 'km', label: 'Khmer' },
+      { value: 'ne', label: 'Nepali' },
+      { value: 'si', label: 'Sinhala' },
+      { value: 'am', label: 'Amharic' },
+      { value: 'zu', label: 'Zulu' },
+      { value: 'af', label: 'Afrikaans' },
+      { value: 'ca', label: 'Catalan' },
+      { value: 'gl', label: 'Galician' },
+      { value: 'eu', label: 'Basque' }
+    ];
+
+    // ============================================================
+    // Countries (full list)
+    // ============================================================
+    const COUNTRIES = [
+      'Afghanistan','Albania','Algeria','Andorra','Angola','Antigua and Barbuda','Argentina','Armenia','Australia','Austria',
+      'Azerbaijan','Bahamas','Bahrain','Bangladesh','Barbados','Belarus','Belgium','Belize','Benin','Bhutan',
+      'Bolivia','Bosnia and Herzegovina','Botswana','Brazil','Brunei','Bulgaria','Burkina Faso','Burundi','Cabo Verde','Cambodia',
+      'Cameroon','Canada','Central African Republic','Chad','Chile','China','Colombia','Comoros','Congo','Costa Rica',
+      'Croatia','Cuba','Cyprus','Czech Republic','Denmark','Djibouti','Dominica','Dominican Republic','East Timor','Ecuador',
+      'Egypt','El Salvador','Equatorial Guinea','Eritrea','Estonia','Eswatini','Ethiopia','Fiji','Finland','France',
+      'Gabon','Gambia','Georgia','Germany','Ghana','Greece','Grenada','Guatemala','Guinea','Guinea-Bissau',
+      'Guyana','Haiti','Honduras','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland',
+      'Israel','Italy','Ivory Coast','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kiribati','Kosovo',
+      'Kuwait','Kyrgyzstan','Laos','Latvia','Lebanon','Lesotho','Liberia','Libya','Liechtenstein','Lithuania',
+      'Luxembourg','Madagascar','Malawi','Malaysia','Maldives','Mali','Malta','Marshall Islands','Mauritania','Mauritius',
+      'Mexico','Micronesia','Moldova','Monaco','Mongolia','Montenegro','Morocco','Mozambique','Myanmar','Namibia',
+      'Nauru','Nepal','Netherlands','New Zealand','Nicaragua','Niger','Nigeria','North Korea','North Macedonia','Norway',
+      'Oman','Pakistan','Palau','Palestine','Panama','Papua New Guinea','Paraguay','Peru','Philippines','Poland',
+      'Portugal','Qatar','Romania','Russia','Rwanda','Saint Kitts and Nevis','Saint Lucia','Saint Vincent and the Grenadines','Samoa','San Marino',
+      'Sao Tome and Principe','Saudi Arabia','Senegal','Serbia','Seychelles','Sierra Leone','Singapore','Slovakia','Slovenia','Solomon Islands',
+      'Somalia','South Africa','South Korea','South Sudan','Spain','Sri Lanka','Sudan','Suriname','Sweden','Switzerland',
+      'Syria','Taiwan','Tajikistan','Tanzania','Thailand','Togo','Tonga','Trinidad and Tobago','Tunisia','Turkey',
+      'Turkmenistan','Tuvalu','UAE','Uganda','Ukraine','United Kingdom','United States','Uruguay','Uzbekistan','Vanuatu',
+      'Vatican City','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'
+    ];
 
     const API_ENDPOINT = '/api/signup';
 
@@ -612,6 +699,11 @@
       document.getElementById('serviceSelector').classList.add('hidden');
       document.getElementById('serviceSelector').classList.remove('flex');
       document.getElementById('mainContent').classList.remove('hidden');
+
+      // Back button (show unless arrived via direct /signup/homeops or /signup/bizops URL)
+      var backBtn = document.getElementById('backToServiceBtn');
+      backBtn.classList.remove('hidden');
+      backBtn.classList.add('flex');
 
       // Header
       document.getElementById('headerTitle').textContent = cfg.brand;
@@ -784,14 +876,7 @@
     }
 
     function buildLanguageOptions(selectedLang) {
-      var langs = [
-        { value: 'en', label: 'English' },
-        { value: 'ur', label: 'Urdu' },
-        { value: 'hi', label: 'Hindi' },
-        { value: 'ar', label: 'Arabic' },
-        { value: 'fr', label: 'French' }
-      ];
-      return langs.map(function(l) {
+      return LANGUAGES.map(function(l) {
         return '<option value="' + l.value + '"' + (l.value === selectedLang ? ' selected' : '') + '>' + l.label + '</option>';
       }).join('');
     }
@@ -944,8 +1029,8 @@
         '<div><input type="text" class="member-name w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="Name" data-member-id="' + memberId + '"></div>' +
         '<div><input type="tel" class="member-whatsapp w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="WhatsApp (+92...)" data-member-id="' + memberId + '"></div>' +
         '<div><input type="text" class="member-nicknames w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="Nicknames (optional)" data-member-id="' + memberId + '"></div>' +
-        '<div class="member-title-container hidden" data-member-id="' + memberId + '">' +
-        '<input type="text" class="member-title w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="Job Title (e.g., Driver, Manager)" data-member-id="' + memberId + '"></div>' +
+        '<div class="member-title-container ' + (cfg.showMemberTitle ? '' : 'hidden') + '" data-member-id="' + memberId + '">' +
+        '<input type="text" class="member-title w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="' + (cfg.showMemberTitle ? cfg.memberTitlePlaceholder : cfg.staffTitlePlaceholder) + '" data-member-id="' + memberId + '"></div>' +
         '</div>' +
         '<div class="member-voice-container hidden mt-3" data-member-id="' + memberId + '"></div>' +
         '</div>';
@@ -988,8 +1073,12 @@
           var titleInput = memberEl.querySelector('.member-title');
           var voiceContainer = memberEl.querySelector('.member-voice-container');
 
+          var currentCfg = getConfig();
+          var titleInput = memberEl.querySelector('.member-title');
+
           if (e.target.value === 'staff') {
             titleContainer.classList.remove('hidden');
+            if (titleInput) titleInput.placeholder = currentCfg.staffTitlePlaceholder;
             voiceContainer.classList.remove('hidden');
 
             var currentPlans = getPlans();
@@ -1004,7 +1093,12 @@
               attachVoiceToggleListeners(memberEl, m);
             }
           } else {
-            titleContainer.classList.add('hidden');
+            if (currentCfg.showMemberTitle) {
+              titleContainer.classList.remove('hidden');
+              if (titleInput) titleInput.placeholder = currentCfg.memberTitlePlaceholder;
+            } else {
+              titleContainer.classList.add('hidden');
+            }
             voiceContainer.classList.add('hidden');
             voiceContainer.innerHTML = '';
           }
@@ -1177,7 +1271,7 @@
             whatsapp: normalizePhone(m.whatsapp),
             nicknames: m.nicknames.trim() || null,
             role: m.role,
-            custom_role: isStaff ? (m.custom_role.trim() || null) : null,
+            custom_role: (isStaff || cfg.showMemberTitle) ? (m.custom_role.trim() || null) : null,
             voice_notes_enabled: voiceEnabled,
             voice_language: voiceLang
           };
@@ -1238,9 +1332,50 @@
     }
 
     // ============================================================
+    // Back to Service Selector
+    // ============================================================
+    function goBackToServiceSelector() {
+      serviceType = null;
+      selectedCurrency = 'PKR';
+      selectedPlan = 'pro';
+      members = [];
+
+      var url = new URL(window.location);
+      url.searchParams.delete('service');
+      window.history.replaceState({}, '', url);
+
+      document.getElementById('mainContent').classList.add('hidden');
+      document.getElementById('serviceSelector').classList.remove('hidden');
+      document.getElementById('serviceSelector').classList.add('flex');
+      document.getElementById('membersContainer').innerHTML = '';
+      document.getElementById('signupForm').reset();
+      document.title = 'Sign Up - MYNK';
+    }
+
+    // ============================================================
+    // Populate Dropdowns
+    // ============================================================
+    function populateDropdowns() {
+      // TTS language dropdown
+      var ttsSelect = document.getElementById('ttsLanguageStaff');
+      ttsSelect.innerHTML = LANGUAGES.map(function(l) {
+        return '<option value="' + l.value + '"' + (l.value === 'en' ? ' selected' : '') + '>' + l.label + '</option>';
+      }).join('');
+
+      // Country dropdown
+      var countrySelect = document.getElementById('country');
+      countrySelect.innerHTML = '<option value="">Select country</option>' +
+        COUNTRIES.map(function(c) {
+          return '<option value="' + c + '"' + (c === 'Pakistan' ? ' selected' : '') + '>' + c + '</option>';
+        }).join('');
+    }
+
+    // ============================================================
     // Initialization
     // ============================================================
     function init() {
+      populateDropdowns();
+
       var urlParams = new URLSearchParams(window.location.search);
 
       var phone = urlParams.get('phone');

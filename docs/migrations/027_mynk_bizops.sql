@@ -155,14 +155,21 @@ CREATE INDEX IF NOT EXISTS idx_accounts_service_type ON accounts(service_type);
 
 -- ============================================
 -- STEP 6: EXPAND LANGUAGE SUPPORT
--- en, ur, hi, ar, fr (was just en/ur)
+-- 59 languages (was just en/ur) - all major global languages
 -- ============================================
 
 -- Drop old CHECK and add expanded
 ALTER TABLE accounts DROP CONSTRAINT IF EXISTS accounts_tts_language_staff_check;
 ALTER TABLE accounts DROP CONSTRAINT IF EXISTS households_tts_language_staff_check;
 ALTER TABLE accounts ADD CONSTRAINT accounts_tts_language_staff_check
-  CHECK (tts_language_staff IN ('en', 'ur', 'hi', 'ar', 'fr'));
+  CHECK (tts_language_staff IN (
+    'en', 'ur', 'hi', 'ar', 'fr', 'es', 'pt', 'de', 'it', 'nl',
+    'ru', 'ja', 'ko', 'zh', 'tr', 'pl', 'sv', 'da', 'no', 'fi',
+    'th', 'vi', 'id', 'ms', 'tl', 'bn', 'ta', 'te', 'pa', 'mr',
+    'gu', 'kn', 'ml', 'sw', 'fa', 'he', 'uk', 'ro', 'cs', 'el',
+    'hu', 'bg', 'sr', 'hr', 'sk', 'lt', 'lv', 'et', 'sl', 'my',
+    'km', 'ne', 'si', 'am', 'zu', 'af', 'ca', 'gl', 'eu'
+  ));
 
 -- Update default from 'ur' to 'en' for new accounts
 ALTER TABLE accounts ALTER COLUMN tts_language_staff SET DEFAULT 'en';
@@ -170,7 +177,14 @@ ALTER TABLE accounts ALTER COLUMN tts_language_staff SET DEFAULT 'en';
 -- Staff language_pref
 ALTER TABLE staff DROP CONSTRAINT IF EXISTS staff_language_pref_check;
 ALTER TABLE staff ADD CONSTRAINT staff_language_pref_check
-  CHECK (language_pref IN ('en', 'ur', 'hi', 'ar', 'fr'));
+  CHECK (language_pref IN (
+    'en', 'ur', 'hi', 'ar', 'fr', 'es', 'pt', 'de', 'it', 'nl',
+    'ru', 'ja', 'ko', 'zh', 'tr', 'pl', 'sv', 'da', 'no', 'fi',
+    'th', 'vi', 'id', 'ms', 'tl', 'bn', 'ta', 'te', 'pa', 'mr',
+    'gu', 'kn', 'ml', 'sw', 'fa', 'he', 'uk', 'ro', 'cs', 'el',
+    'hu', 'bg', 'sr', 'hr', 'sk', 'lt', 'lv', 'et', 'sl', 'my',
+    'km', 'ne', 'si', 'am', 'zu', 'af', 'ca', 'gl', 'eu'
+  ));
 
 -- ============================================
 -- STEP 7: REMOVE LEGACY/CUSTOM PLAN TIERS
@@ -770,7 +784,7 @@ COMMENT ON TABLE accounts IS 'Core account entity (household or organization) wi
 COMMENT ON COLUMN accounts.service_type IS 'Service type: homeops (household) or bizops (business)';
 COMMENT ON COLUMN accounts.currency IS 'Billing currency: PKR or USD';
 COMMENT ON COLUMN accounts.plan_tier IS 'Plan tier: essential, pro, max';
-COMMENT ON COLUMN accounts.tts_language_staff IS 'Default TTS language for staff voice notes: en/ur/hi/ar/fr';
+COMMENT ON COLUMN accounts.tts_language_staff IS 'Default TTS language for staff voice notes (ISO 639-1 code)';
 COMMENT ON COLUMN accounts.expected_monthly_amount IS 'Expected monthly payment in account currency (PKR or USD)';
 
 COMMENT ON FUNCTION get_plan_price(TEXT, TEXT) IS 'Get monthly price for a plan tier in specified currency (PKR or USD)';
@@ -803,13 +817,42 @@ COMMENT ON FUNCTION admin_cost_dashboard(TEXT) IS 'Password-protected admin dash
 -- SELECT COUNT(*) FROM households;
 
 -- ============================================
+-- STEP 18: EXPAND LANGUAGE CHECK CONSTRAINTS (SUPPLEMENTARY)
+-- Run this if Step 6 already ran with only 5 languages (en, ur, hi, ar, fr).
+-- This expands to all 59 supported languages.
+-- Safe to run even if Step 6 already has the expanded list (DROP IF EXISTS).
+-- ============================================
+
+ALTER TABLE accounts DROP CONSTRAINT IF EXISTS accounts_tts_language_staff_check;
+ALTER TABLE accounts ADD CONSTRAINT accounts_tts_language_staff_check
+  CHECK (tts_language_staff IN (
+    'en', 'ur', 'hi', 'ar', 'fr', 'es', 'pt', 'de', 'it', 'nl',
+    'ru', 'ja', 'ko', 'zh', 'tr', 'pl', 'sv', 'da', 'no', 'fi',
+    'th', 'vi', 'id', 'ms', 'tl', 'bn', 'ta', 'te', 'pa', 'mr',
+    'gu', 'kn', 'ml', 'sw', 'fa', 'he', 'uk', 'ro', 'cs', 'el',
+    'hu', 'bg', 'sr', 'hr', 'sk', 'lt', 'lv', 'et', 'sl', 'my',
+    'km', 'ne', 'si', 'am', 'zu', 'af', 'ca', 'gl', 'eu'
+  ));
+
+ALTER TABLE staff DROP CONSTRAINT IF EXISTS staff_language_pref_check;
+ALTER TABLE staff ADD CONSTRAINT staff_language_pref_check
+  CHECK (language_pref IN (
+    'en', 'ur', 'hi', 'ar', 'fr', 'es', 'pt', 'de', 'it', 'nl',
+    'ru', 'ja', 'ko', 'zh', 'tr', 'pl', 'sv', 'da', 'no', 'fi',
+    'th', 'vi', 'id', 'ms', 'tl', 'bn', 'ta', 'te', 'pa', 'mr',
+    'gu', 'kn', 'ml', 'sw', 'fa', 'he', 'uk', 'ro', 'cs', 'el',
+    'hu', 'bg', 'sr', 'hr', 'sk', 'lt', 'lv', 'et', 'sl', 'my',
+    'km', 'ne', 'si', 'am', 'zu', 'af', 'ca', 'gl', 'eu'
+  ));
+
+-- ============================================
 -- DONE!
 -- ============================================
 -- After running this migration:
 -- 1. Table 'households' renamed to 'accounts', backward-compat view created
 -- 2. All 'household_id' columns renamed to 'account_id' (9 tables)
 -- 3. service_type (homeops/bizops) and currency (PKR/USD) added
--- 4. TTS language expanded: en, ur, hi, ar, fr (default: en)
+-- 4. TTS language expanded: 59 languages (default: en)
 -- 5. Legacy plan tiers removed (starter/family/premium/custom → essential/pro)
 -- 6. get_plan_price() supports dual currency
 -- 7. calculate_expected_amount() supports dual currency
