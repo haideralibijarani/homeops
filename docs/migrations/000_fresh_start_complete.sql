@@ -1,4 +1,4 @@
--- MYNK Complete Database Schema - Fresh Start
+-- MINK Complete Database Schema - Fresh Start
 -- Run this in Supabase SQL Editor for a clean database setup
 -- Combines all migrations (001-027) into a single script
 --
@@ -1147,8 +1147,8 @@ COMMENT ON COLUMN payments.addons_activated IS 'JSON record of add-ons activated
 COMMENT ON COLUMN payments.proof_url IS 'URL of payment proof screenshot from WhatsApp MediaUrl';
 
 COMMENT ON TABLE message_history IS 'Recent message history per user for AI conversation context (auto-cleaned after 24h)';
-COMMENT ON COLUMN message_history.user_number IS 'WhatsApp number of the human user (not MYNK number)';
-COMMENT ON COLUMN message_history.direction IS 'inbound = user to MYNK, outbound = MYNK to user';
+COMMENT ON COLUMN message_history.user_number IS 'WhatsApp number of the human user (not MINK number)';
+COMMENT ON COLUMN message_history.direction IS 'inbound = user to MINK, outbound = MINK to user';
 COMMENT ON COLUMN message_history.content IS 'Message text content (truncated to 500 chars for context)';
 COMMENT ON COLUMN message_history.intent IS 'AI-classified intent for context';
 
@@ -1184,6 +1184,6 @@ COMMENT ON FUNCTION get_unacked_reminders IS 'Get sent one-time reminders needin
 -- SELECT COUNT(*) FROM organizations;  -- BizOps only
 
 -- ============================================
--- DONE! Your MYNK database is ready.
+-- DONE! Your MINK database is ready.
 -- Supports both HomeOps (households) and BizOps (organizations).
 -- ============================================
