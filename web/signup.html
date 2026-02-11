@@ -87,6 +87,39 @@
     .currency-toggle .active {
       font-weight: 700;
     }
+    /* WhatsApp-style chat */
+    .chat-bg {
+      background: #efeae2;
+      border-radius: 0 0 12px 12px;
+    }
+    .chat-msg {
+      max-width: 82%;
+      padding: 6px 10px;
+      font-size: 0.8125rem;
+      line-height: 1.45;
+      box-shadow: 0 1px 1px rgba(0,0,0,0.06);
+    }
+    .chat-sent {
+      background: #d9fdd3;
+      margin-left: auto;
+      border-radius: 8px 2px 8px 8px;
+    }
+    .chat-received {
+      background: #fff;
+      margin-right: auto;
+      border-radius: 2px 8px 8px 8px;
+    }
+    .chat-system-pill {
+      font-size: 0.6875rem;
+      background: rgba(255,255,255,0.9);
+      padding: 2px 10px;
+      border-radius: 6px;
+      box-shadow: 0 1px 1px rgba(0,0,0,0.06);
+    }
+    details summary { list-style: none; }
+    details summary::-webkit-details-marker { display: none; }
+    details[open] .details-chevron { transform: rotate(180deg); }
+    .details-chevron { transition: transform 0.2s ease; }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -509,6 +542,15 @@
         </div>
         <div id="examplesGrid" class="grid gap-3 sm:grid-cols-2"></div>
       </section>
+
+      <!-- Simulated Conversations -->
+      <section id="simulationsSection" class="mt-8 mb-8">
+        <div class="text-center mb-8">
+          <h2 class="text-2xl font-bold text-gray-900 mb-2" id="simTitle">A Day in the Life</h2>
+          <p class="text-gray-500 text-sm max-w-lg mx-auto" id="simSubtitle">See how real conversations flow between you, your staff, and HomeOps</p>
+        </div>
+        <div id="simulationsContainer" class="space-y-3"></div>
+      </section>
     </main>
 
     <footer class="border-t border-gray-200 mt-16">
@@ -790,6 +832,7 @@
       updatePlanCardPrices();
       selectPlan('pro');
       renderExamples();
+      renderSimulations();
     }
 
     // ============================================================
@@ -1444,7 +1487,7 @@
         { msg: 'Update the delivery task \u2014 change to Clifton branch', tag: 'Task Update' },
         { msg: 'Tell all employees: office closes early at 3pm', tag: 'Company Announcement' },
         { msg: 'Show me this month\u2019s usage report', tag: 'Usage Report' },
-        { msg: 'Theek hai', tag: 'Quick Acknowledgment' }
+        { msg: 'Got it', tag: 'Quick Acknowledgment' }
       ]
     };
 
@@ -1464,6 +1507,141 @@
           '<span class="text-brand-600 text-xs font-bold">' + (i + 1) + '</span></div>' +
           '<div><p class="text-sm text-gray-800">\u201c' + ex.msg + '\u201d</p>' +
           '<p class="text-xs text-brand-600 font-medium mt-0.5">' + ex.tag + '</p></div></div>';
+      }).join('');
+    }
+
+    // ============================================================
+    // Simulated Conversations
+    // ============================================================
+    const SIMULATIONS = {
+      homeops: [
+        {
+          title: 'Lunch Prep Gone Wrong',
+          flow: 'Create \u2192 Acknowledge \u2192 Problem \u2192 Update \u2192 Complete',
+          messages: [
+            { type: 'sent', sender: 'You', text: 'Tell the cook to prepare biryani for lunch, guests arriving at 2pm' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Task created: Prepare biryani for lunch\nAssigned to: Ahmed (Cook)\nDue: 2:00 PM today' },
+            { type: 'system', text: 'Ahmed notified via voice note in Urdu' },
+            { type: 'system', text: 'Ahmed acknowledged the task' },
+            { type: 'received', sender: 'HomeOps', text: 'Ahmed acknowledged: Prepare biryani for lunch \u2714' },
+            { type: 'system', text: '30 minutes later...' },
+            { type: 'received', sender: 'HomeOps', text: '\u26a0\ufe0f Problem reported by Ahmed (Cook):\nWe don\u2019t have enough rice for biryani' },
+            { type: 'sent', sender: 'You', text: 'Update the task \u2014 make pulao instead, we have enough rice for that' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Task updated: Prepare pulao for lunch\nAhmed has been notified.' },
+            { type: 'system', text: 'Ahmed completed the task' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Task completed: Prepare pulao for lunch\nCompleted by Ahmed (Cook)' }
+          ]
+        },
+        {
+          title: 'Morning Coordination',
+          flow: 'Multi-task \u2192 Acknowledge \u2192 Complete \u2192 Status Check',
+          messages: [
+            { type: 'sent', sender: 'You', text: 'Driver should pick up kids from school at 2pm and the maid should clean the guest room before evening' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 2 tasks created:\n1. Pick up kids from school \u2014 Imran (Driver), Due: 2:00 PM\n2. Clean the guest room \u2014 Sana (Maid), Due: 5:00 PM' },
+            { type: 'system', text: 'Imran and Sana notified' },
+            { type: 'system', text: 'Both acknowledged' },
+            { type: 'received', sender: 'HomeOps', text: 'All assignees acknowledged \u2714' },
+            { type: 'system', text: 'Imran completed: Pick up kids' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Imran (Driver) completed: Pick up kids from school' },
+            { type: 'system', text: 'Sana completed: Clean guest room' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Sana (Maid) completed: Clean the guest room' },
+            { type: 'sent', sender: 'You', text: 'What\u2019s pending for today?' },
+            { type: 'received', sender: 'HomeOps', text: 'No pending tasks for today. All done! \u2705' }
+          ]
+        },
+        {
+          title: 'Reminder & Follow-up',
+          flow: 'Reminder \u2192 Fires \u2192 New Task \u2192 Acknowledge',
+          messages: [
+            { type: 'sent', sender: 'You', text: 'Remind me to call the plumber tomorrow at 10am' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Reminder set: Call the plumber\nWhen: Tomorrow, 10:00 AM' },
+            { type: 'system', text: 'Next day, 10:00 AM' },
+            { type: 'received', sender: 'HomeOps', text: '\u23f0 Reminder: Call the plumber' },
+            { type: 'sent', sender: 'You', text: 'Done, he\u2019s coming Thursday. Tell the maid to make sure the bathroom is accessible' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Task created: Ensure bathroom is accessible for plumber\nAssigned to: Sana (Maid)\nDue: Thursday' },
+            { type: 'system', text: 'Sana acknowledged the task' }
+          ]
+        }
+      ],
+      bizops: [
+        {
+          title: 'Client Report Deadline',
+          flow: 'Create \u2192 Acknowledge \u2192 Problem \u2192 Update \u2192 Complete',
+          messages: [
+            { type: 'sent', sender: 'You', text: 'Assign the Q4 financial report to Sarah, due Friday 5pm' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Task created: Q4 financial report\nAssigned to: Sarah (Finance Analyst)\nDue: Friday, 5:00 PM' },
+            { type: 'system', text: 'Sarah acknowledged the task' },
+            { type: 'received', sender: 'BizOps', text: 'Sarah acknowledged: Q4 financial report \u2714' },
+            { type: 'system', text: 'Thursday afternoon...' },
+            { type: 'received', sender: 'BizOps', text: '\u26a0\ufe0f Problem reported by Sarah (Finance Analyst):\nWaiting on revenue data from sales team, can\u2019t finalize' },
+            { type: 'sent', sender: 'You', text: 'Update the deadline to Monday 5pm and tell her to use last month\u2019s estimates for now' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Task updated: Deadline moved to Monday 5:00 PM\nNotes added. Sarah has been notified.' },
+            { type: 'system', text: 'Monday \u2014 Sarah completed the task' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Task completed: Q4 financial report\nCompleted by Sarah (Finance Analyst)' }
+          ]
+        },
+        {
+          title: 'Office Maintenance',
+          flow: 'Create \u2192 Acknowledge \u2192 Complete \u2192 Status Check',
+          messages: [
+            { type: 'sent', sender: 'You', text: 'The printer on 3rd floor is jammed again, assign IT' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Task created: Fix jammed printer (3rd floor)\nAssigned to: Bilal (IT Support)' },
+            { type: 'system', text: 'Bilal acknowledged the task' },
+            { type: 'system', text: 'Bilal completed the task' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Task completed: Fix jammed printer\nCompleted by Bilal (IT Support)' },
+            { type: 'sent', sender: 'You', text: 'Show me today\u2019s tasks' },
+            { type: 'received', sender: 'BizOps', text: 'Today\u2019s tasks:\n\u2705 Fix jammed printer \u2014 Bilal (completed)\n\u23f3 Prepare client deck \u2014 Ahmed (in progress)\n\ud83d\udccb Review contracts \u2014 Sara (pending)' }
+          ]
+        },
+        {
+          title: 'Team-wide Reminder',
+          flow: 'Reminder \u2192 Notifications \u2192 Status Check',
+          messages: [
+            { type: 'sent', sender: 'You', text: 'Remind the whole team: client presentations due by Friday noon' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Reminder set for all team members:\nClient presentations due Friday noon\n5 people will be reminded' },
+            { type: 'system', text: 'Friday morning \u2014 all team members notified' },
+            { type: 'sent', sender: 'You', text: 'Who hasn\u2019t submitted yet?' },
+            { type: 'received', sender: 'BizOps', text: 'Pending submissions:\n\u2022 Ahmed (Sales) \u2014 not yet acknowledged\n\u2022 Zara (Ops) \u2014 acknowledged, in progress\n\n3 others have completed \u2705' }
+          ]
+        }
+      ]
+    };
+
+    function renderSimulations() {
+      var sims = SIMULATIONS[serviceType] || SIMULATIONS.homeops;
+      var cfg = getConfig();
+
+      document.getElementById('simTitle').textContent = 'A Day in the Life';
+      document.getElementById('simSubtitle').textContent = serviceType === 'bizops'
+        ? 'See how real conversations flow between you, your employees, and BizOps'
+        : 'See how real conversations flow between you, your staff, and HomeOps';
+
+      var container = document.getElementById('simulationsContainer');
+      container.innerHTML = sims.map(function(sim) {
+        var chatHtml = sim.messages.map(function(m) {
+          if (m.type === 'system') {
+            return '<div class="flex justify-center"><span class="chat-system-pill text-gray-500">' + m.text + '</span></div>';
+          }
+          var bubbleClass = m.type === 'sent' ? 'chat-sent' : 'chat-received';
+          var senderColor = m.type === 'sent' ? 'text-brand-700' : 'text-gray-500';
+          return '<div class="flex ' + (m.type === 'sent' ? 'justify-end' : 'justify-start') + '">' +
+            '<div class="chat-msg ' + bubbleClass + '">' +
+            '<p class="font-semibold text-xs ' + senderColor + ' mb-0.5">' + m.sender + '</p>' +
+            '<p class="text-gray-800 whitespace-pre-line">' + m.text + '</p>' +
+            '</div></div>';
+        }).join('');
+
+        return '<details class="bg-white rounded-xl border border-gray-200 overflow-hidden">' +
+          '<summary class="p-4 cursor-pointer hover:bg-gray-50 transition flex items-center justify-between gap-3">' +
+          '<div class="flex items-center gap-3 min-w-0">' +
+          '<div class="w-8 h-8 bg-brand-50 rounded-full flex items-center justify-center shrink-0">' +
+          '<svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></div>' +
+          '<div class="min-w-0"><p class="font-semibold text-gray-900 text-sm">' + sim.title + '</p>' +
+          '<p class="text-xs text-gray-400 truncate">' + sim.flow + '</p></div></div>' +
+          '<svg class="details-chevron w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>' +
+          '</summary>' +
+          '<div class="chat-bg p-4 space-y-2 border-t border-gray-100">' + chatHtml + '</div>' +
+          '</details>';
       }).join('');
     }
 
