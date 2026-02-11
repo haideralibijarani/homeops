@@ -1475,16 +1475,16 @@
       bizops: [
         { msg: 'Assign the client proposal to Sarah, due Friday', tag: 'Deadline Assignment' },
         { msg: 'What\u2019s pending for the operations team?', tag: 'Team Overview' },
-        { msg: 'Tell Ahmed to prepare the quarterly report by EOD', tag: 'Time-Sensitive Task' },
+        { msg: 'Tell Marcus to prepare the quarterly report by EOD', tag: 'Time-Sensitive Task' },
         { msg: 'Remind me to follow up with the vendor at 2pm', tag: 'Business Reminder' },
         { msg: 'Mark the inventory audit as complete', tag: 'Task Completion' },
         { msg: 'The office AC isn\u2019t working, assign facilities', tag: 'Issue Routing' },
         { msg: 'Cancel the meeting room booking task', tag: 'Task Cancellation' },
-        { msg: 'Add Zara as Operations Coordinator', tag: 'Team Onboarding' },
+        { msg: 'Add Elena as Operations Coordinator', tag: 'Team Onboarding' },
         { msg: 'Who hasn\u2019t acknowledged their tasks today?', tag: 'Accountability' },
-        { msg: 'Change Bilal\u2019s voice notes to Arabic', tag: 'Language Settings' },
+        { msg: 'Change Carlos\u2019s voice notes to Spanish', tag: 'Language Settings' },
         { msg: 'Remind the team: submit timesheets by Friday 5pm', tag: 'Team Reminder' },
-        { msg: 'Update the delivery task \u2014 change to Clifton branch', tag: 'Task Update' },
+        { msg: 'Update the delivery task \u2014 change to Downtown office', tag: 'Task Update' },
         { msg: 'Tell all employees: office closes early at 3pm', tag: 'Company Announcement' },
         { msg: 'Show me this month\u2019s usage report', tag: 'Usage Report' },
         { msg: 'Got it', tag: 'Quick Acknowledgment' }
@@ -1561,6 +1561,25 @@
             { type: 'received', sender: 'HomeOps', text: '\u2705 Task created: Ensure bathroom is accessible for plumber\nAssigned to: Sana (Maid)\nDue: Thursday' },
             { type: 'system', text: 'Sana acknowledged the task' }
           ]
+        },
+        {
+          title: 'The Language Barrier, Solved',
+          flow: 'Voice Note in Urdu \u2192 English Translation \u2192 Update \u2192 Complete',
+          highlight: 'Your cook can\u2019t read or write English \u2014 and he doesn\u2019t need to. He spoke naturally in Urdu, and you received a polished English message. No apps to install, no training required. Just WhatsApp voice notes in their own language. This is how you manage a household where every staff member stays connected, regardless of literacy or language.',
+          messages: [
+            { type: 'sent', sender: 'You', text: 'Tell the cook to prepare dinner for 8 guests tonight, make something special' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Task created: Prepare special dinner for 8 guests\nAssigned to: Ahmed (Cook)\nDue: Tonight' },
+            { type: 'system', text: 'Ahmed received a voice note in Urdu' },
+            { type: 'system', text: 'Ahmed replied with a voice note in Urdu' },
+            { type: 'received', sender: 'HomeOps', text: 'Ahmed (Cook) says:\n\u201cSir, I can make mutton karahi and chicken biryani. But I\u2019ll need to buy mutton from the market \u2014 we only have chicken at home. Should I go now? I can have everything ready by 8:30.\u201d' },
+            { type: 'system', text: 'Ahmed can\u2019t type or read English. He spoke in Urdu \u2014 HomeOps transcribed, translated, and delivered his reply to you as clean English text.' },
+            { type: 'sent', sender: 'You', text: 'Yes go now. Make both dishes, also prepare raita, salad, and kheer for dessert' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Task updated. Ahmed notified via voice note in Urdu.' },
+            { type: 'system', text: 'Ahmed replied with a voice note in Urdu' },
+            { type: 'received', sender: 'HomeOps', text: 'Ahmed confirms:\n\u201cHeading to market now. Karahi, biryani, raita, salad, and kheer \u2014 everything will be ready by 8:30pm.\u201d' },
+            { type: 'system', text: 'Ahmed completed the task at 8:25 PM' },
+            { type: 'received', sender: 'HomeOps', text: '\u2705 Task completed: Prepare special dinner for 8 guests\nCompleted by Ahmed (Cook)' }
+          ]
         }
       ],
       bizops: [
@@ -1585,12 +1604,12 @@
           flow: 'Create \u2192 Acknowledge \u2192 Complete \u2192 Status Check',
           messages: [
             { type: 'sent', sender: 'You', text: 'The printer on 3rd floor is jammed again, assign IT' },
-            { type: 'received', sender: 'BizOps', text: '\u2705 Task created: Fix jammed printer (3rd floor)\nAssigned to: Bilal (IT Support)' },
-            { type: 'system', text: 'Bilal acknowledged the task' },
-            { type: 'system', text: 'Bilal completed the task' },
-            { type: 'received', sender: 'BizOps', text: '\u2705 Task completed: Fix jammed printer\nCompleted by Bilal (IT Support)' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Task created: Fix jammed printer (3rd floor)\nAssigned to: James (IT Support)' },
+            { type: 'system', text: 'James acknowledged the task' },
+            { type: 'system', text: 'James completed the task' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Task completed: Fix jammed printer\nCompleted by James (IT Support)' },
             { type: 'sent', sender: 'You', text: 'Show me today\u2019s tasks' },
-            { type: 'received', sender: 'BizOps', text: 'Today\u2019s tasks:\n\u2705 Fix jammed printer \u2014 Bilal (completed)\n\u23f3 Prepare client deck \u2014 Ahmed (in progress)\n\ud83d\udccb Review contracts \u2014 Sara (pending)' }
+            { type: 'received', sender: 'BizOps', text: 'Today\u2019s tasks:\n\u2705 Fix jammed printer \u2014 James (completed)\n\u23f3 Prepare client deck \u2014 Marcus (in progress)\n\ud83d\udccb Review contracts \u2014 Sofia (pending)' }
           ]
         },
         {
@@ -1601,7 +1620,26 @@
             { type: 'received', sender: 'BizOps', text: '\u2705 Reminder set for all team members:\nClient presentations due Friday noon\n5 people will be reminded' },
             { type: 'system', text: 'Friday morning \u2014 all team members notified' },
             { type: 'sent', sender: 'You', text: 'Who hasn\u2019t submitted yet?' },
-            { type: 'received', sender: 'BizOps', text: 'Pending submissions:\n\u2022 Ahmed (Sales) \u2014 not yet acknowledged\n\u2022 Zara (Ops) \u2014 acknowledged, in progress\n\n3 others have completed \u2705' }
+            { type: 'received', sender: 'BizOps', text: 'Pending submissions:\n\u2022 Marcus (Sales) \u2014 not yet acknowledged\n\u2022 Elena (Ops) \u2014 acknowledged, in progress\n\n3 others have completed \u2705' }
+          ]
+        },
+        {
+          title: 'Multilingual Team, Zero Friction',
+          flow: 'Voice Note in Spanish \u2192 English Translation \u2192 Update \u2192 Complete',
+          highlight: 'Carlos was on the warehouse floor \u2014 no time to sit and type emails. He spoke in Spanish, you read it in English. No translators, no miscommunication, no delays. Your multilingual team operates as if everyone speaks the same language. This is how global businesses run with BizOps.',
+          messages: [
+            { type: 'sent', sender: 'You', text: 'Tell Carlos to finish the warehouse inventory count by end of day' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Task created: Complete warehouse inventory count\nAssigned to: Carlos (Warehouse Lead)\nDue: Today, 6:00 PM' },
+            { type: 'system', text: 'Carlos received a voice note in Spanish' },
+            { type: 'system', text: 'Carlos replied with a voice note in Spanish' },
+            { type: 'received', sender: 'BizOps', text: 'Carlos (Warehouse Lead) says:\n\u201cBoss, I found a problem in Section B \u2014 system shows 200 units but I\u2019m only counting 180. Also 12 damaged packages in Section D need reporting. Should I stop and investigate or keep going?\u201d' },
+            { type: 'system', text: 'Carlos was on the warehouse floor with no time to type. He spoke in Spanish \u2014 BizOps transcribed, translated, and delivered his message to you in English.' },
+            { type: 'sent', sender: 'You', text: 'Flag Section B for investigation, photograph the damage in D, and finish the rest' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Task updated. Carlos notified via voice note in Spanish.' },
+            { type: 'system', text: 'Carlos replied with a voice note in Spanish' },
+            { type: 'received', sender: 'BizOps', text: 'Carlos confirms:\n\u201cSection B flagged. Photographing Section D damage now. Full count will be done by 5:30.\u201d' },
+            { type: 'system', text: 'Carlos completed the task at 5:28 PM' },
+            { type: 'received', sender: 'BizOps', text: '\u2705 Task completed: Warehouse inventory count\nSection B: flagged (\u221220 units). Section D: 12 packages logged.\nCompleted by Carlos' }
           ]
         }
       ]
@@ -1611,7 +1649,9 @@
       var sims = SIMULATIONS[serviceType] || SIMULATIONS.homeops;
       var cfg = getConfig();
 
-      document.getElementById('simTitle').textContent = 'A Day in the Life';
+      document.getElementById('simTitle').textContent = serviceType === 'bizops'
+        ? 'A Day in the Life of a BizOps User'
+        : 'A Day in the Life of a HomeOps User';
       document.getElementById('simSubtitle').textContent = serviceType === 'bizops'
         ? 'See how real conversations flow between you, your employees, and BizOps'
         : 'See how real conversations flow between you, your staff, and HomeOps';
@@ -1631,16 +1671,23 @@
             '</div></div>';
         }).join('');
 
-        return '<details class="bg-white rounded-xl border border-gray-200 overflow-hidden">' +
+        var highlightHtml = sim.highlight
+          ? '<div class="bg-gradient-to-r from-brand-50 to-white p-4 border-t border-brand-100">' +
+            '<p class="text-sm font-semibold text-brand-800 mb-1">Why this changes everything</p>' +
+            '<p class="text-xs text-brand-700 leading-relaxed">' + sim.highlight + '</p></div>'
+          : '';
+
+        return '<details class="bg-white rounded-xl border border-gray-200 overflow-hidden"' + (sim.highlight ? ' open' : '') + '>' +
           '<summary class="p-4 cursor-pointer hover:bg-gray-50 transition flex items-center justify-between gap-3">' +
           '<div class="flex items-center gap-3 min-w-0">' +
           '<div class="w-8 h-8 bg-brand-50 rounded-full flex items-center justify-center shrink-0">' +
           '<svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></div>' +
-          '<div class="min-w-0"><p class="font-semibold text-gray-900 text-sm">' + sim.title + '</p>' +
+          '<div class="min-w-0"><p class="font-semibold text-gray-900 text-sm">' + sim.title + (sim.highlight ? ' \u2b50' : '') + '</p>' +
           '<p class="text-xs text-gray-400 truncate">' + sim.flow + '</p></div></div>' +
           '<svg class="details-chevron w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>' +
           '</summary>' +
           '<div class="chat-bg p-4 space-y-2 border-t border-gray-100">' + chatHtml + '</div>' +
+          highlightHtml +
           '</details>';
       }).join('');
     }
