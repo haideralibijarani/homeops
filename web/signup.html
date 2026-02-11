@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign Up - HomeOps</title>
+  <title>Sign Up - MYNK</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -11,16 +11,16 @@
         extend: {
           colors: {
             brand: {
-              50: '#f0fdf4',
-              100: '#dcfce7',
-              200: '#bbf7d0',
-              300: '#86efac',
-              400: '#4ade80',
-              500: '#22c55e',
-              600: '#16a34a',
-              700: '#15803d',
-              800: '#166534',
-              900: '#14532d',
+              50: 'var(--brand-50)',
+              100: 'var(--brand-100)',
+              200: 'var(--brand-200)',
+              300: 'var(--brand-300)',
+              400: 'var(--brand-400)',
+              500: 'var(--brand-500)',
+              600: 'var(--brand-600)',
+              700: 'var(--brand-700)',
+              800: 'var(--brand-800)',
+              900: 'var(--brand-900)',
             }
           }
         }
@@ -28,18 +28,36 @@
     }
   </script>
   <style>
+    :root {
+      --brand-50: #f0fdf4;
+      --brand-100: #dcfce7;
+      --brand-200: #bbf7d0;
+      --brand-300: #86efac;
+      --brand-400: #4ade80;
+      --brand-500: #22c55e;
+      --brand-600: #16a34a;
+      --brand-700: #15803d;
+      --brand-800: #166534;
+      --brand-900: #14532d;
+    }
+    :root[data-service="bizops"] {
+      --brand-50: #eff6ff;
+      --brand-100: #dbeafe;
+      --brand-200: #bfdbfe;
+      --brand-300: #93c5fd;
+      --brand-400: #60a5fa;
+      --brand-500: #3b82f6;
+      --brand-600: #2563eb;
+      --brand-700: #1d4ed8;
+      --brand-800: #1e40af;
+      --brand-900: #1e3a8a;
+    }
     .member-item {
       animation: slideIn 0.2s ease;
     }
     @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .plan-card {
       transition: all 0.2s ease;
@@ -50,651 +68,751 @@
       box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
     }
     .plan-card.selected {
-      border-color: #22c55e;
-      box-shadow: 0 0 0 2px #22c55e;
+      border-color: var(--brand-500);
+      box-shadow: 0 0 0 2px var(--brand-500);
     }
-    .plan-card .check-circle {
-      display: none;
+    .plan-card .check-circle { display: none; }
+    .plan-card.selected .check-circle { display: flex; }
+    .service-card {
+      transition: all 0.2s ease;
+      cursor: pointer;
     }
-    .plan-card.selected .check-circle {
-      display: flex;
+    .service-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .service-card.selected {
+      box-shadow: 0 0 0 2px currentColor;
+    }
+    .currency-toggle .active {
+      font-weight: 700;
     }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-  <!-- Header -->
-  <header class="bg-white border-b border-gray-200">
-    <div class="max-w-4xl mx-auto px-4 py-4">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <!-- Service Selector (shown when no service param) -->
+  <div id="serviceSelector" class="hidden min-h-screen flex flex-col items-center justify-center px-4 py-12">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome to MYNK</h1>
+      <p class="text-gray-600">Choose the service that fits your needs</p>
+    </div>
+    <div class="grid gap-6 sm:grid-cols-2 max-w-2xl w-full">
+      <!-- HomeOps Card -->
+      <div class="service-card bg-white rounded-2xl border-2 border-gray-200 p-8 text-center hover:border-green-500" onclick="chooseService('homeops')">
+        <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
           </svg>
         </div>
-        <div>
-          <h1 class="text-xl font-bold text-gray-900">HomeOps</h1>
-          <p class="text-sm text-gray-500">Household Operations Assistant</p>
+        <h2 class="text-xl font-bold text-gray-900 mb-1">HomeOps by MYNK</h2>
+        <p class="text-sm text-gray-500 mb-4">Household Operations Assistant</p>
+        <p class="text-sm text-gray-600">Manage your household via WhatsApp. Coordinate family and staff effortlessly.</p>
+      </div>
+      <!-- BizOps Card -->
+      <div class="service-card bg-white rounded-2xl border-2 border-gray-200 p-8 text-center hover:border-blue-500" onclick="chooseService('bizops')">
+        <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
         </div>
+        <h2 class="text-xl font-bold text-gray-900 mb-1">BizOps by MYNK</h2>
+        <p class="text-sm text-gray-500 mb-4">Business Operations Assistant</p>
+        <p class="text-sm text-gray-600">Manage your team via WhatsApp. Coordinate employees and operations seamlessly.</p>
       </div>
     </div>
-  </header>
+  </div>
 
-  <main class="max-w-4xl mx-auto px-4 py-8">
-    <div class="text-center mb-8">
-      <h2 class="text-2xl font-bold text-gray-900 mb-2">Create Your Household</h2>
-      <p class="text-gray-600">Set up your household and start managing tasks via WhatsApp</p>
-    </div>
-
-    <form id="signupForm" class="space-y-8">
-      <!-- Step 1: Subscriber Info -->
-      <section class="bg-white rounded-xl border border-gray-200 p-6">
-        <div class="flex items-center gap-3 mb-6">
-          <span class="w-8 h-8 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center font-semibold text-sm">1</span>
-          <h3 class="text-lg font-semibold text-gray-900">Your Information</h3>
-        </div>
-
-        <div class="grid gap-4 sm:grid-cols-2">
-          <div class="sm:col-span-2">
-            <label for="subscriberName" class="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
-            <input type="text" id="subscriberName" name="subscriber_name" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
-              placeholder="Enter your full name">
-          </div>
-
-          <div>
-            <label for="subscriberWhatsapp" class="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number *</label>
-            <input type="tel" id="subscriberWhatsapp" name="subscriber_whatsapp" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
-              placeholder="+92 300 1234567">
-            <p class="text-xs text-gray-500 mt-1">Include country code (e.g., +92)</p>
-          </div>
-
-          <div>
-            <label for="subscriberEmail" class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-            <input type="email" id="subscriberEmail" name="subscriber_email" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
-              placeholder="you@example.com">
-          </div>
-        </div>
-      </section>
-
-      <!-- Step 2: Household Info -->
-      <section class="bg-white rounded-xl border border-gray-200 p-6">
-        <div class="flex items-center gap-3 mb-6">
-          <span class="w-8 h-8 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center font-semibold text-sm">2</span>
-          <h3 class="text-lg font-semibold text-gray-900">Household Details</h3>
-        </div>
-
-        <div class="grid gap-4 sm:grid-cols-2">
-          <div class="sm:col-span-2">
-            <label for="householdName" class="block text-sm font-medium text-gray-700 mb-1">Household Name *</label>
-            <input type="text" id="householdName" name="household_name" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
-              placeholder="e.g., The Khan Family">
-          </div>
-
-          <div>
-            <label for="timezone" class="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
-            <select id="timezone" name="timezone"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white">
-              <option value="Asia/Karachi" selected>Pakistan (PKT)</option>
-              <option value="Asia/Dubai">UAE (GST)</option>
-              <option value="Asia/Kolkata">India (IST)</option>
-              <option value="Europe/London">UK (GMT/BST)</option>
-              <option value="America/New_York">US Eastern</option>
-              <option value="America/Los_Angeles">US Pacific</option>
-            </select>
-          </div>
-
-          <!-- Default Staff Voice Note Language -->
-          <div>
-            <label for="ttsLanguageStaff" class="block text-sm font-medium text-gray-700 mb-1">
-              Default Staff Voice Note Language
-            </label>
-            <select id="ttsLanguageStaff" name="tts_language_staff"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white">
-              <option value="ur" selected>Urdu (Recommended)</option>
-              <option value="en">English</option>
-            </select>
-            <p class="text-xs text-gray-500 mt-1">Default language for staff voice notes. Override per staff member below.</p>
-          </div>
-
-          <div>
-            <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City *</label>
-            <input type="text" id="city" name="city" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
-              placeholder="e.g., Karachi">
-          </div>
-
-          <div>
-            <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Country *</label>
-            <select id="country" name="country" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white">
-              <option value="Pakistan" selected>Pakistan</option>
-              <option value="UAE">UAE</option>
-              <option value="Saudi Arabia">Saudi Arabia</option>
-              <option value="India">India</option>
-              <option value="United Kingdom">United Kingdom</option>
-              <option value="United States">United States</option>
-              <option value="Canada">Canada</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-
-          <div class="sm:col-span-2">
-            <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address (Optional)</label>
-            <textarea id="address" name="address" rows="2"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition resize-none"
-              placeholder="Enter your address"></textarea>
-          </div>
-        </div>
-      </section>
-
-      <!-- Step 3: Choose Your Plan -->
-      <section id="planSection" class="bg-white rounded-xl border border-gray-200 p-6">
-        <div class="flex items-center gap-3 mb-4">
-          <span class="w-8 h-8 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center font-semibold text-sm">3</span>
-          <h3 class="text-lg font-semibold text-gray-900">Choose Your Plan</h3>
-        </div>
-
-        <!-- Marketing copy -->
-        <div class="text-center mb-8">
-          <h4 class="text-xl font-bold text-gray-900 mb-2">One message. Everyone knows what to do.</h4>
-          <p class="text-gray-500 text-sm max-w-lg mx-auto">Save 2+ hours/day on household coordination. The cost of one staff member &mdash; coordinates all of them.</p>
-        </div>
-
-        <!-- Plan Cards -->
-        <div class="grid gap-4 md:grid-cols-3 mb-6" id="planCards">
-
-          <!-- Essential -->
-          <div class="plan-card relative border-2 border-gray-200 rounded-xl p-5 bg-white" data-plan="essential" onclick="selectPlan('essential')">
-            <div class="check-circle absolute top-3 right-3 w-6 h-6 bg-brand-500 rounded-full items-center justify-center">
-              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-              </svg>
-            </div>
-            <h5 class="text-lg font-bold text-gray-900 mb-1">Essential</h5>
-            <div class="mb-4">
-              <span class="text-2xl font-bold text-gray-900">PKR 25,000</span>
-              <span class="text-sm text-gray-500">/mo</span>
-            </div>
-            <ul class="space-y-2.5 text-sm text-gray-600">
-              <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                Up to 5 people
-              </li>
-              <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                500 tasks/mo
-              </li>
-              <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                5,000 messages/mo
-              </li>
-              <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                Daily text digest
-              </li>
-            </ul>
-            <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500 space-y-1">
-              <p class="font-medium text-gray-600">Voice notes: +PKR 7,000/staff/mo add-on</p>
-              <p>1,200 voice notes/mo pool shared across staff. E.g. 2 staff with voice = 600 each on average.</p>
-            </div>
-          </div>
-
-          <!-- Pro (Most Popular) -->
-          <div class="plan-card selected relative border-2 border-brand-500 rounded-xl p-5 bg-white" data-plan="pro" onclick="selectPlan('pro')">
-            <div class="absolute -top-3 left-1/2 -translate-x-1/2">
-              <span class="bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">Most Popular</span>
-            </div>
-            <div class="check-circle absolute top-3 right-3 w-6 h-6 bg-brand-500 rounded-full items-center justify-center">
-              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-              </svg>
-            </div>
-            <h5 class="text-lg font-bold text-gray-900 mb-1">Pro</h5>
-            <div class="mb-4">
-              <span class="text-2xl font-bold text-gray-900">PKR 50,000</span>
-              <span class="text-sm text-gray-500">/mo</span>
-            </div>
-            <ul class="space-y-2.5 text-sm text-gray-600">
-              <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                Up to 8 people
-              </li>
-              <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                1,000 tasks/mo
-              </li>
-              <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                12,000 messages/mo
-              </li>
-              <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                2,500 voice notes/mo (included)
-              </li>
-              <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                Daily text digest
-              </li>
-            </ul>
-            <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
-              Voice pool shared across all staff
-            </div>
-          </div>
-
-          <!-- Max -->
-          <div class="plan-card relative border-2 border-gray-200 rounded-xl p-5 bg-white" data-plan="max" onclick="selectPlan('max')">
-            <div class="check-circle absolute top-3 right-3 w-6 h-6 bg-brand-500 rounded-full items-center justify-center">
-              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-              </svg>
-            </div>
-            <h5 class="text-lg font-bold text-gray-900 mb-1">Max</h5>
-            <div class="mb-4">
-              <span class="text-2xl font-bold text-gray-900">PKR 100,000</span>
-              <span class="text-sm text-gray-500">/mo</span>
-            </div>
-            <ul class="space-y-2.5 text-sm text-gray-600">
-              <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                Up to 15 people
-              </li>
-              <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                2,000 tasks/mo
-              </li>
-              <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                25,000 messages/mo
-              </li>
-              <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                6,000 voice notes/mo (included)
-              </li>
-              <li class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                Daily text digest
-              </li>
-            </ul>
-            <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
-              Voice pool shared across all staff
-            </div>
-          </div>
-        </div>
-
-        <!-- Add-ons & voice note info -->
-        <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 mb-3">
-          <p class="text-sm font-medium text-gray-700 mb-2">Add-ons</p>
-          <div class="flex flex-col sm:flex-row sm:gap-6 gap-1 text-sm text-gray-500">
-            <span>Extra people: <strong class="text-gray-700">+PKR 5,000/person/mo</strong></span>
-            <span id="voiceAddonInfo">Voice add-on (Essential): <strong class="text-gray-700">+PKR 7,000/staff/mo</strong></span>
-          </div>
-        </div>
-
-        <div class="bg-blue-50 rounded-lg p-4 border border-blue-100 mb-4">
-          <p class="text-sm font-medium text-gray-700 mb-1">How voice notes work</p>
-          <p class="text-xs text-gray-600">Only voice notes <strong>sent by HomeOps to staff</strong> count toward your pool. Voice notes <strong>you send to HomeOps</strong> don't count toward your voice pool — they only use your message allowance.</p>
-        </div>
-
-        <p class="text-center text-xs text-gray-400">Cancel anytime. No contracts.</p>
-      </section>
-
-      <!-- Step 4: Members -->
-      <section class="bg-white rounded-xl border border-gray-200 p-6">
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center gap-3">
-            <span class="w-8 h-8 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center font-semibold text-sm">4</span>
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900">Household Members & Staff</h3>
-              <p class="text-sm text-gray-500" id="memberSubtitle">Add family members and household staff</p>
-            </div>
-          </div>
-          <span id="memberCount" class="text-sm text-gray-500">0 people</span>
-        </div>
-
-        <!-- Plan-aware limit notice -->
-        <div id="memberLimitNotice" class="mb-4 p-3 bg-brand-50 border border-brand-100 rounded-lg text-sm text-brand-800">
-          <span id="memberLimitText">Your Pro plan includes up to 8 people (including you). Extra people are +PKR 5,000/person/mo.</span>
-        </div>
-
-        <div id="membersContainer" class="space-y-4 mb-4">
-          <!-- Members will be added here -->
-        </div>
-
-        <button type="button" id="addMemberBtn"
-          class="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-brand-500 hover:text-brand-600 transition flex items-center justify-center gap-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-          </svg>
-          Add Person
-        </button>
-      </section>
-
-      <!-- Step 5: Pricing Summary -->
-      <section class="bg-white rounded-xl border border-gray-200 p-6">
-        <div class="flex items-center gap-3 mb-6">
-          <span class="w-8 h-8 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center font-semibold text-sm">5</span>
-          <h3 class="text-lg font-semibold text-gray-900">Pricing Summary</h3>
-        </div>
-
-        <!-- Price breakdown -->
-        <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
-          <div class="space-y-2.5 text-sm">
-            <div class="flex justify-between text-gray-700">
-              <span id="pricingPlanLabel">Your Plan: Pro</span>
-              <span id="pricingPlanAmount" class="font-medium">PKR 50,000</span>
-            </div>
-            <div class="flex justify-between text-gray-500 text-xs pl-4">
-              <span id="pricingIncludedNote">8 people included</span>
-              <span></span>
-            </div>
-            <div id="pricingExtraRow" class="flex justify-between text-gray-600 hidden">
-              <span id="pricingExtraLabel">+ 0 extra people</span>
-              <span id="pricingExtraAmount">PKR 0</span>
-            </div>
-            <div id="pricingVoiceRow" class="flex justify-between text-gray-600">
-              <span id="pricingVoiceLabel">Voice notes for all staff (included)</span>
-              <span id="pricingVoiceAmount" class="text-brand-600 font-medium">Included</span>
-            </div>
-            <div class="border-t border-gray-300 pt-3 mt-3 flex justify-between font-bold text-gray-900 text-base">
-              <span>Monthly Total</span>
-              <span id="pricingTotal">PKR 50,000</span>
-            </div>
-          </div>
-          <!-- Limits footer -->
-          <div id="pricingLimits" class="mt-4 pt-3 border-t border-gray-200 text-xs text-gray-400 text-center">
-            Limits: 1,000 tasks/mo &middot; 12,000 messages/mo
-          </div>
-        </div>
-
-        <input type="hidden" name="billing_cycle" value="monthly">
-      </section>
-
-      <!-- Submit -->
-      <div id="formSection" class="bg-white rounded-xl border border-gray-200 p-6">
-        <div id="formError" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
-
-        <button type="submit" id="submitBtn"
-          class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-          <span id="submitText">Create Household</span>
-          <svg id="submitSpinner" class="hidden w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </button>
-
-        <p class="text-center text-sm text-gray-500 mt-4">
-          By signing up, you agree to our
-          <a href="#" class="text-brand-600 hover:underline">Terms of Service</a> and
-          <a href="#" class="text-brand-600 hover:underline">Privacy Policy</a>
-        </p>
-      </div>
-
-      <!-- Success Message (hidden by default) -->
-      <div id="successSection" class="hidden bg-white rounded-xl border border-gray-200 p-6">
-        <div class="text-center">
-          <div class="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+  <!-- Main Signup Form (hidden until service chosen) -->
+  <div id="mainContent" class="hidden">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200">
+      <div class="max-w-4xl mx-auto px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center">
+            <svg id="headerIconHome" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            <svg id="headerIconBiz" class="w-6 h-6 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
             </svg>
           </div>
-          <h3 id="successTitle" class="text-xl font-bold text-gray-900 mb-2">Success!</h3>
-          <div id="successMessage" class="text-gray-600 mb-6"></div>
-          <a href="/" class="inline-block px-6 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg transition">
-            Back to Home
-          </a>
+          <div>
+            <h1 id="headerTitle" class="text-xl font-bold text-gray-900">HomeOps by MYNK</h1>
+            <p id="headerSubtitle" class="text-sm text-gray-500">Household Operations Assistant</p>
+          </div>
         </div>
       </div>
-    </form>
-  </main>
+    </header>
 
-  <!-- Footer -->
-  <footer class="border-t border-gray-200 mt-16">
-    <div class="max-w-4xl mx-auto px-4 py-6 text-center text-sm text-gray-500">
-      <p>&copy; 2024 HomeOps. All rights reserved.</p>
-    </div>
-  </footer>
+    <main class="max-w-4xl mx-auto px-4 py-8">
+      <div class="text-center mb-8">
+        <h2 id="formTitle" class="text-2xl font-bold text-gray-900 mb-2">Create Your Household</h2>
+        <p id="formSubtitle" class="text-gray-600">Set up your household and start managing tasks via WhatsApp</p>
+      </div>
+
+      <form id="signupForm" class="space-y-8">
+        <!-- Step 1: Subscriber Info -->
+        <section class="bg-white rounded-xl border border-gray-200 p-6">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="w-8 h-8 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center font-semibold text-sm">1</span>
+            <h3 class="text-lg font-semibold text-gray-900">Your Information</h3>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="sm:col-span-2">
+              <label for="subscriberName" class="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
+              <input type="text" id="subscriberName" name="subscriber_name" required
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
+                placeholder="Enter your full name">
+            </div>
+            <div>
+              <label for="subscriberWhatsapp" class="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number *</label>
+              <input type="tel" id="subscriberWhatsapp" name="subscriber_whatsapp" required
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
+                placeholder="+92 300 1234567">
+              <p class="text-xs text-gray-500 mt-1">Include country code (e.g., +92)</p>
+            </div>
+            <div>
+              <label for="subscriberEmail" class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+              <input type="email" id="subscriberEmail" name="subscriber_email" required
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
+                placeholder="you@example.com">
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 2: Account Details -->
+        <section class="bg-white rounded-xl border border-gray-200 p-6">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="w-8 h-8 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center font-semibold text-sm">2</span>
+            <h3 id="step2Title" class="text-lg font-semibold text-gray-900">Household Details</h3>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="sm:col-span-2">
+              <label for="accountName" id="accountNameLabel" class="block text-sm font-medium text-gray-700 mb-1">Household Name *</label>
+              <input type="text" id="accountName" name="account_name" required
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
+                placeholder="e.g., The Khan Family">
+            </div>
+            <div>
+              <label for="timezone" class="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+              <select id="timezone" name="timezone"
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white">
+                <option value="Asia/Karachi" selected>Pakistan (PKT)</option>
+                <option value="Asia/Dubai">UAE (GST)</option>
+                <option value="Asia/Kolkata">India (IST)</option>
+                <option value="Asia/Riyadh">Saudi Arabia (AST)</option>
+                <option value="Europe/Paris">France (CET)</option>
+                <option value="Europe/London">UK (GMT/BST)</option>
+                <option value="America/New_York">US Eastern</option>
+                <option value="America/Los_Angeles">US Pacific</option>
+              </select>
+            </div>
+            <div>
+              <label for="ttsLanguageStaff" class="block text-sm font-medium text-gray-700 mb-1">
+                Default Staff Voice Note Language
+              </label>
+              <select id="ttsLanguageStaff" name="tts_language_staff"
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white">
+                <option value="en" selected>English</option>
+                <option value="ur">Urdu</option>
+                <option value="hi">Hindi</option>
+                <option value="ar">Arabic</option>
+                <option value="fr">French</option>
+              </select>
+              <p class="text-xs text-gray-500 mt-1">Default language for staff voice notes. Override per staff member below.</p>
+            </div>
+            <div>
+              <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City *</label>
+              <input type="text" id="city" name="city" required
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
+                placeholder="e.g., Karachi">
+            </div>
+            <div>
+              <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Country *</label>
+              <select id="country" name="country" required
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white">
+                <option value="Pakistan" selected>Pakistan</option>
+                <option value="UAE">UAE</option>
+                <option value="Saudi Arabia">Saudi Arabia</option>
+                <option value="India">India</option>
+                <option value="France">France</option>
+                <option value="United Kingdom">United Kingdom</option>
+                <option value="United States">United States</option>
+                <option value="Canada">Canada</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 3: Choose Your Plan -->
+        <section id="planSection" class="bg-white rounded-xl border border-gray-200 p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-8 h-8 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center font-semibold text-sm">3</span>
+            <h3 class="text-lg font-semibold text-gray-900">Choose Your Plan</h3>
+          </div>
+
+          <div class="text-center mb-6">
+            <h4 id="marketingTitle" class="text-xl font-bold text-gray-900 mb-2">One message. Everyone knows what to do.</h4>
+            <p id="marketingSubtitle" class="text-gray-500 text-sm max-w-lg mx-auto">Save 2+ hours/day on household coordination. The cost of one staff member &mdash; coordinates all of them.</p>
+          </div>
+
+          <!-- Currency Toggle (BizOps only) -->
+          <div id="currencyToggle" class="hidden justify-center mb-6">
+            <div class="inline-flex items-center bg-gray-100 rounded-lg p-1 text-sm">
+              <button type="button" id="currencyPKR" class="currency-btn px-4 py-1.5 rounded-md bg-white shadow text-gray-900 font-bold" onclick="setCurrency('PKR')">PKR</button>
+              <button type="button" id="currencyUSD" class="currency-btn px-4 py-1.5 rounded-md text-gray-500" onclick="setCurrency('USD')">USD</button>
+            </div>
+          </div>
+
+          <!-- Plan Cards -->
+          <div class="grid gap-4 md:grid-cols-3 mb-6" id="planCards">
+            <!-- Essential -->
+            <div class="plan-card relative border-2 border-gray-200 rounded-xl p-5 bg-white" data-plan="essential" onclick="selectPlan('essential')">
+              <div class="check-circle absolute top-3 right-3 w-6 h-6 bg-brand-500 rounded-full items-center justify-center">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <h5 class="text-lg font-bold text-gray-900 mb-1">Essential</h5>
+              <div class="mb-4">
+                <span id="essentialPrice" class="text-2xl font-bold text-gray-900">PKR 25,000</span>
+                <span class="text-sm text-gray-500">/mo</span>
+              </div>
+              <ul class="space-y-2.5 text-sm text-gray-600">
+                <li class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  Up to 5 people
+                </li>
+                <li class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  500 tasks/mo
+                </li>
+                <li class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  5,000 messages/mo
+                </li>
+                <li class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  Daily text digest
+                </li>
+              </ul>
+              <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500 space-y-1">
+                <p id="essentialVoiceAddon" class="font-medium text-gray-600">Voice notes: +PKR 7,000/staff/mo add-on</p>
+                <p>1,200 voice notes/mo pool shared across staff.</p>
+              </div>
+            </div>
+
+            <!-- Pro (Most Popular) -->
+            <div class="plan-card selected relative border-2 border-brand-500 rounded-xl p-5 bg-white" data-plan="pro" onclick="selectPlan('pro')">
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span class="bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">Most Popular</span>
+              </div>
+              <div class="check-circle absolute top-3 right-3 w-6 h-6 bg-brand-500 rounded-full items-center justify-center">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <h5 class="text-lg font-bold text-gray-900 mb-1">Pro</h5>
+              <div class="mb-4">
+                <span id="proPrice" class="text-2xl font-bold text-gray-900">PKR 50,000</span>
+                <span class="text-sm text-gray-500">/mo</span>
+              </div>
+              <ul class="space-y-2.5 text-sm text-gray-600">
+                <li class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  Up to 8 people
+                </li>
+                <li class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  1,000 tasks/mo
+                </li>
+                <li class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  12,000 messages/mo
+                </li>
+                <li class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  2,500 voice notes/mo (included)
+                </li>
+                <li class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  Daily text digest
+                </li>
+              </ul>
+              <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                Voice pool shared across all staff
+              </div>
+            </div>
+
+            <!-- Max -->
+            <div class="plan-card relative border-2 border-gray-200 rounded-xl p-5 bg-white" data-plan="max" onclick="selectPlan('max')">
+              <div class="check-circle absolute top-3 right-3 w-6 h-6 bg-brand-500 rounded-full items-center justify-center">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <h5 class="text-lg font-bold text-gray-900 mb-1">Max</h5>
+              <div class="mb-4">
+                <span id="maxPrice" class="text-2xl font-bold text-gray-900">PKR 100,000</span>
+                <span class="text-sm text-gray-500">/mo</span>
+              </div>
+              <ul class="space-y-2.5 text-sm text-gray-600">
+                <li class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  Up to 15 people
+                </li>
+                <li class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  2,000 tasks/mo
+                </li>
+                <li class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  25,000 messages/mo
+                </li>
+                <li class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  6,000 voice notes/mo (included)
+                </li>
+                <li class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-brand-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  Daily text digest
+                </li>
+              </ul>
+              <div class="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                Voice pool shared across all staff
+              </div>
+            </div>
+          </div>
+
+          <!-- Add-ons & voice note info -->
+          <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 mb-3">
+            <p class="text-sm font-medium text-gray-700 mb-2">Add-ons</p>
+            <div class="flex flex-col sm:flex-row sm:gap-6 gap-1 text-sm text-gray-500">
+              <span id="extraPersonInfo">Extra people: <strong class="text-gray-700">+PKR 5,000/person/mo</strong></span>
+              <span id="voiceAddonInfo">Voice add-on (Essential): <strong class="text-gray-700">+PKR 7,000/staff/mo</strong></span>
+            </div>
+          </div>
+
+          <div class="bg-blue-50 rounded-lg p-4 border border-blue-100 mb-4">
+            <p class="text-sm font-medium text-gray-700 mb-1">How voice notes work</p>
+            <p class="text-xs text-gray-600">Only voice notes <strong>sent by <span class="svc-brand">HomeOps</span> to staff</strong> count toward your pool. Voice notes <strong>you send to <span class="svc-brand">HomeOps</span></strong> don't count toward your voice pool &mdash; they only use your message allowance.</p>
+          </div>
+
+          <p class="text-center text-xs text-gray-400">Cancel anytime. No contracts.</p>
+        </section>
+
+        <!-- Step 4: Members -->
+        <section class="bg-white rounded-xl border border-gray-200 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+              <span class="w-8 h-8 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center font-semibold text-sm">4</span>
+              <div>
+                <h3 id="step4Title" class="text-lg font-semibold text-gray-900">Members & Staff</h3>
+                <p class="text-sm text-gray-500" id="memberSubtitle">Add family members and staff</p>
+              </div>
+            </div>
+            <span id="memberCount" class="text-sm text-gray-500">0 people</span>
+          </div>
+
+          <div id="memberLimitNotice" class="mb-4 p-3 bg-brand-50 border border-brand-100 rounded-lg text-sm text-brand-800">
+            <span id="memberLimitText">Your Pro plan includes up to 8 people (including you). Extra people are +PKR 5,000/person/mo.</span>
+          </div>
+
+          <div id="membersContainer" class="space-y-4 mb-4"></div>
+
+          <button type="button" id="addMemberBtn"
+            class="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-brand-500 hover:text-brand-600 transition flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Add Person
+          </button>
+        </section>
+
+        <!-- Step 5: Pricing Summary -->
+        <section class="bg-white rounded-xl border border-gray-200 p-6">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="w-8 h-8 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center font-semibold text-sm">5</span>
+            <h3 class="text-lg font-semibold text-gray-900">Pricing Summary</h3>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+            <div class="space-y-2.5 text-sm">
+              <div class="flex justify-between text-gray-700">
+                <span id="pricingPlanLabel">Your Plan: Pro</span>
+                <span id="pricingPlanAmount" class="font-medium">PKR 50,000</span>
+              </div>
+              <div class="flex justify-between text-gray-500 text-xs pl-4">
+                <span id="pricingIncludedNote">8 people included</span>
+                <span></span>
+              </div>
+              <div id="pricingExtraRow" class="flex justify-between text-gray-600 hidden">
+                <span id="pricingExtraLabel">+ 0 extra people</span>
+                <span id="pricingExtraAmount">PKR 0</span>
+              </div>
+              <div id="pricingVoiceRow" class="flex justify-between text-gray-600">
+                <span id="pricingVoiceLabel">Voice notes for all staff (included)</span>
+                <span id="pricingVoiceAmount" class="text-brand-600 font-medium">Included</span>
+              </div>
+              <div class="border-t border-gray-300 pt-3 mt-3 flex justify-between font-bold text-gray-900 text-base">
+                <span>Monthly Total</span>
+                <span id="pricingTotal">PKR 50,000</span>
+              </div>
+            </div>
+            <div id="pricingLimits" class="mt-4 pt-3 border-t border-gray-200 text-xs text-gray-400 text-center">
+              Limits: 1,000 tasks/mo &middot; 12,000 messages/mo
+            </div>
+          </div>
+
+          <input type="hidden" name="billing_cycle" value="monthly">
+        </section>
+
+        <!-- Submit -->
+        <div id="formSection" class="bg-white rounded-xl border border-gray-200 p-6">
+          <div id="formError" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
+
+          <button type="submit" id="submitBtn"
+            class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+            <span id="submitText">Create Household</span>
+            <svg id="submitSpinner" class="hidden w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+
+          <p class="text-center text-sm text-gray-500 mt-4">
+            By signing up, you agree to our
+            <a href="#" class="text-brand-600 hover:underline">Terms of Service</a> and
+            <a href="#" class="text-brand-600 hover:underline">Privacy Policy</a>
+          </p>
+        </div>
+
+        <!-- Success Message -->
+        <div id="successSection" class="hidden bg-white rounded-xl border border-gray-200 p-6">
+          <div class="text-center">
+            <div class="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <h3 id="successTitle" class="text-xl font-bold text-gray-900 mb-2">Success!</h3>
+            <div id="successMessage" class="text-gray-600 mb-6"></div>
+            <a href="/" class="inline-block px-6 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg transition">
+              Back to Home
+            </a>
+          </div>
+        </div>
+      </form>
+    </main>
+
+    <footer class="border-t border-gray-200 mt-16">
+      <div class="max-w-4xl mx-auto px-4 py-6 text-center text-sm text-gray-500">
+        <p>&copy; 2025 MYNK. All rights reserved.</p>
+      </div>
+    </footer>
+  </div>
 
   <script>
-    // Configuration
-    const API_ENDPOINT = '/api/signup';
-
-    // Plan definitions
-    const PLANS = {
-      essential: {
-        name: 'Essential',
-        base: 25000,
-        included_people: 5,
-        tasks_per_month: 500,
-        messages_per_month: 5000,
-        voice_pool: 1200,
-        voice_included: false,
-        extra_person_price: 5000,
-        voice_addon_price: 7000
+    // ============================================================
+    // Service Configuration
+    // ============================================================
+    const SERVICE_CONFIG = {
+      homeops: {
+        brand: 'HomeOps by MYNK',
+        shortBrand: 'HomeOps',
+        entityName: 'Household',
+        entityNameLower: 'household',
+        familyLabel: 'Family',
+        staffLabel: 'Staff',
+        namePlaceholder: 'e.g., The Khan Family',
+        tagline: 'Household Operations Assistant',
+        marketingTitle: 'One message. Everyone knows what to do.',
+        marketingSubtitle: 'Save 2+ hours/day on household coordination. The cost of one staff member \u2014 coordinates all of them.',
+        defaultCurrency: 'PKR',
+        showCurrencyPicker: false
       },
-      pro: {
-        name: 'Pro',
-        base: 50000,
-        included_people: 8,
-        tasks_per_month: 1000,
-        messages_per_month: 12000,
-        voice_pool: 2500,
-        voice_included: true,
-        extra_person_price: 5000,
-        voice_addon_price: 0
-      },
-      max: {
-        name: 'Max',
-        base: 100000,
-        included_people: 15,
-        tasks_per_month: 2000,
-        messages_per_month: 25000,
-        voice_pool: 6000,
-        voice_included: true,
-        extra_person_price: 5000,
-        voice_addon_price: 0
+      bizops: {
+        brand: 'BizOps by MYNK',
+        shortBrand: 'BizOps',
+        entityName: 'Organization',
+        entityNameLower: 'organization',
+        familyLabel: 'Team Member',
+        staffLabel: 'Employee',
+        namePlaceholder: 'e.g., Vertex Solutions',
+        tagline: 'Business Operations Assistant',
+        marketingTitle: 'One message. Your team gets it done.',
+        marketingSubtitle: 'Save hours/day on team coordination. Manage your entire operation via WhatsApp.',
+        defaultCurrency: null,
+        showCurrencyPicker: true
       }
     };
 
+    // ============================================================
+    // Plan Definitions (Dual Currency)
+    // ============================================================
+    const PLANS_PKR = {
+      essential: { name: 'Essential', base: 25000, included_people: 5, tasks_per_month: 500, messages_per_month: 5000, voice_pool: 1200, voice_included: false, extra_person_price: 5000, voice_addon_price: 7000 },
+      pro: { name: 'Pro', base: 50000, included_people: 8, tasks_per_month: 1000, messages_per_month: 12000, voice_pool: 2500, voice_included: true, extra_person_price: 5000, voice_addon_price: 0 },
+      max: { name: 'Max', base: 100000, included_people: 15, tasks_per_month: 2000, messages_per_month: 25000, voice_pool: 6000, voice_included: true, extra_person_price: 5000, voice_addon_price: 0 }
+    };
+
+    const PLANS_USD = {
+      essential: { name: 'Essential', base: 89, included_people: 5, tasks_per_month: 500, messages_per_month: 5000, voice_pool: 1200, voice_included: false, extra_person_price: 19, voice_addon_price: 25 },
+      pro: { name: 'Pro', base: 179, included_people: 8, tasks_per_month: 1000, messages_per_month: 12000, voice_pool: 2500, voice_included: true, extra_person_price: 19, voice_addon_price: 0 },
+      max: { name: 'Max', base: 349, included_people: 15, tasks_per_month: 2000, messages_per_month: 25000, voice_pool: 6000, voice_included: true, extra_person_price: 19, voice_addon_price: 0 }
+    };
+
+    const API_ENDPOINT = '/api/signup';
+
+    // ============================================================
     // State
+    // ============================================================
+    let serviceType = null;
+    let selectedCurrency = 'PKR';
     let selectedPlan = 'pro';
     let members = [];
 
-    // DOM Elements
-    const form = document.getElementById('signupForm');
-    const membersContainer = document.getElementById('membersContainer');
-    const addMemberBtn = document.getElementById('addMemberBtn');
-    const memberCount = document.getElementById('memberCount');
-    const submitBtn = document.getElementById('submitBtn');
-    const submitText = document.getElementById('submitText');
-    const submitSpinner = document.getElementById('submitSpinner');
-    const formError = document.getElementById('formError');
-    const formSection = document.getElementById('formSection');
-    const successSection = document.getElementById('successSection');
-    const successTitle = document.getElementById('successTitle');
-    const successMessage = document.getElementById('successMessage');
+    // ============================================================
+    // Helpers
+    // ============================================================
+    function getPlans() {
+      return selectedCurrency === 'USD' ? PLANS_USD : PLANS_PKR;
+    }
 
-    // Initialize
-    function init() {
-      // Pre-fill phone from URL params
-      const urlParams = new URLSearchParams(window.location.search);
-      const phone = urlParams.get('phone');
-      if (phone) {
-        document.getElementById('subscriberWhatsapp').value = decodeURIComponent(phone);
+    function getConfig() {
+      return SERVICE_CONFIG[serviceType] || SERVICE_CONFIG.homeops;
+    }
+
+    function formatPrice(amount) {
+      if (selectedCurrency === 'USD') {
+        return '$' + amount.toLocaleString();
+      }
+      return 'PKR ' + amount.toLocaleString();
+    }
+
+    // ============================================================
+    // Service Selection
+    // ============================================================
+    function chooseService(svc) {
+      serviceType = svc;
+      const url = new URL(window.location);
+      url.searchParams.set('service', svc);
+      window.history.replaceState({}, '', url);
+      applyService();
+    }
+
+    function applyService() {
+      const cfg = getConfig();
+
+      // Set CSS theme
+      document.documentElement.setAttribute('data-service', serviceType);
+
+      // Hide selector, show form
+      document.getElementById('serviceSelector').classList.add('hidden');
+      document.getElementById('serviceSelector').classList.remove('flex');
+      document.getElementById('mainContent').classList.remove('hidden');
+
+      // Header
+      document.getElementById('headerTitle').textContent = cfg.brand;
+      document.getElementById('headerSubtitle').textContent = cfg.tagline;
+      document.getElementById('headerIconHome').classList.toggle('hidden', serviceType === 'bizops');
+      document.getElementById('headerIconBiz').classList.toggle('hidden', serviceType !== 'bizops');
+
+      // Page title
+      document.title = 'Sign Up - ' + cfg.brand;
+
+      // Form title
+      document.getElementById('formTitle').textContent = 'Create Your ' + cfg.entityName;
+      document.getElementById('formSubtitle').textContent = 'Set up your ' + cfg.entityNameLower + ' and start managing tasks via WhatsApp';
+
+      // Step 2
+      document.getElementById('step2Title').textContent = cfg.entityName + ' Details';
+      document.getElementById('accountNameLabel').textContent = cfg.entityName + ' Name *';
+      document.getElementById('accountName').placeholder = cfg.namePlaceholder;
+
+      // Step 3 marketing
+      document.getElementById('marketingTitle').textContent = cfg.marketingTitle;
+      document.getElementById('marketingSubtitle').textContent = cfg.marketingSubtitle;
+
+      // Step 4
+      document.getElementById('step4Title').textContent = serviceType === 'bizops'
+        ? 'Team Members & Employees'
+        : 'Household Members & Staff';
+      document.getElementById('memberSubtitle').textContent = serviceType === 'bizops'
+        ? 'Add team members and employees'
+        : 'Add family members and household staff';
+
+      // Submit button
+      document.getElementById('submitText').textContent = 'Create ' + cfg.entityName;
+
+      // Brand name spans
+      document.querySelectorAll('.svc-brand').forEach(function(el) {
+        el.textContent = cfg.shortBrand;
+      });
+
+      // Currency
+      if (cfg.showCurrencyPicker) {
+        document.getElementById('currencyToggle').classList.remove('hidden');
+        document.getElementById('currencyToggle').classList.add('flex');
+        selectedCurrency = 'PKR';
+      } else {
+        document.getElementById('currencyToggle').classList.add('hidden');
+        document.getElementById('currencyToggle').classList.remove('flex');
+        selectedCurrency = cfg.defaultCurrency || 'PKR';
       }
 
-      // Add member button
-      addMemberBtn.addEventListener('click', addMember);
-
-      // Form submission
-      form.addEventListener('submit', handleSubmit);
-
-      // Set default plan
+      updatePlanCardPrices();
       selectPlan('pro');
     }
 
+    // ============================================================
+    // Currency Toggle
+    // ============================================================
+    function setCurrency(cur) {
+      selectedCurrency = cur;
+      document.getElementById('currencyPKR').className = cur === 'PKR'
+        ? 'currency-btn px-4 py-1.5 rounded-md bg-white shadow text-gray-900 font-bold'
+        : 'currency-btn px-4 py-1.5 rounded-md text-gray-500';
+      document.getElementById('currencyUSD').className = cur === 'USD'
+        ? 'currency-btn px-4 py-1.5 rounded-md bg-white shadow text-gray-900 font-bold'
+        : 'currency-btn px-4 py-1.5 rounded-md text-gray-500';
+
+      updatePlanCardPrices();
+      selectPlan(selectedPlan);
+    }
+
+    function updatePlanCardPrices() {
+      var plans = getPlans();
+      document.getElementById('essentialPrice').textContent = formatPrice(plans.essential.base);
+      document.getElementById('proPrice').textContent = formatPrice(plans.pro.base);
+      document.getElementById('maxPrice').textContent = formatPrice(plans.max.base);
+
+      document.getElementById('essentialVoiceAddon').textContent =
+        'Voice notes: +' + formatPrice(plans.essential.voice_addon_price) + '/staff/mo add-on';
+
+      document.getElementById('extraPersonInfo').innerHTML =
+        'Extra people: <strong class="text-gray-700">+' + formatPrice(plans.essential.extra_person_price) + '/person/mo</strong>';
+      document.getElementById('voiceAddonInfo').innerHTML =
+        'Voice add-on (Essential): <strong class="text-gray-700">+' + formatPrice(plans.essential.voice_addon_price) + '/staff/mo</strong>';
+    }
+
+    // ============================================================
+    // Plan Selection
+    // ============================================================
     function selectPlan(planKey) {
       selectedPlan = planKey;
-      const plan = PLANS[planKey];
+      var plans = getPlans();
+      var plan = plans[planKey];
 
-      // Update card visual states
-      document.querySelectorAll('.plan-card').forEach(card => {
-        if (card.dataset.plan === planKey) {
-          card.classList.add('selected');
-          // Restore "Most Popular" border for Pro even when selected
-          if (planKey !== 'pro') {
-            card.style.borderColor = '#22c55e';
-          }
-        } else {
-          card.classList.remove('selected');
+      document.querySelectorAll('.plan-card').forEach(function(card) {
+        card.classList.toggle('selected', card.dataset.plan === planKey);
+        if (card.dataset.plan !== planKey) {
           card.style.borderColor = '';
-          // Reset non-selected cards to default gray border
-          if (card.dataset.plan !== 'pro' || planKey !== card.dataset.plan) {
-            // Only reset border if it's not the pro card or if pro is not selected
-          }
         }
       });
 
-      // Reset Pro card border when a different plan is selected
-      const proCard = document.querySelector('.plan-card[data-plan="pro"]');
+      var proCard = document.querySelector('.plan-card[data-plan="pro"]');
       if (planKey !== 'pro') {
         proCard.style.borderColor = '';
         proCard.classList.remove('selected');
       }
 
-      // Update voice add-on info visibility
-      const voiceAddonInfo = document.getElementById('voiceAddonInfo');
+      var voiceAddonInfo = document.getElementById('voiceAddonInfo');
       if (plan.voice_included) {
         voiceAddonInfo.innerHTML = 'Voice notes: <strong class="text-brand-600">Included in your plan</strong>';
       } else {
-        voiceAddonInfo.innerHTML = 'Voice add-on (Essential only): <strong class="text-gray-700">+PKR 7,000/staff/mo</strong>';
+        voiceAddonInfo.innerHTML = 'Voice add-on (Essential only): <strong class="text-gray-700">+' + formatPrice(plan.voice_addon_price) + '/staff/mo</strong>';
       }
 
-      // Update member limit notice
       document.getElementById('memberLimitText').textContent =
-        `Your ${plan.name} plan includes up to ${plan.included_people} people (including you). Extra people are +PKR 5,000/person/mo.`;
+        'Your ' + plan.name + ' plan includes up to ' + plan.included_people + ' people (including you). Extra people are +' + formatPrice(plan.extra_person_price) + '/person/mo.';
 
-      // Update all existing member voice sections based on plan
       updateAllMemberVoiceSections();
-
-      // Recalculate pricing
       updatePricing();
     }
 
+    // ============================================================
+    // Voice Sections
+    // ============================================================
     function updateAllMemberVoiceSections() {
-      const plan = PLANS[selectedPlan];
+      var plans = getPlans();
+      var plan = plans[selectedPlan];
 
-      members.forEach(member => {
-        const memberEl = membersContainer.querySelector(`.member-item[data-member-id="${member.id}"]`);
-        if (!memberEl) return;
+      members.forEach(function(member) {
+        var memberEl = document.querySelector('.member-item[data-member-id="' + member.id + '"]');
+        if (!memberEl || member.role !== 'staff') return;
 
-        if (member.role === 'staff') {
-          const voiceContainer = memberEl.querySelector('.member-voice-container');
-          voiceContainer.classList.remove('hidden');
+        var voiceContainer = memberEl.querySelector('.member-voice-container');
+        voiceContainer.classList.remove('hidden');
 
-          if (plan.voice_included) {
-            // Pro/Max: voice is included, show "included" text, hide toggle
-            member.voice_notes_enabled = true;
-            voiceContainer.innerHTML = buildVoiceIncludedHtml(member.id, member.voice_language);
-            attachVoiceLanguageListener(memberEl, member);
-          } else {
-            // Essential: show toggle with +PKR 7,000/mo
-            voiceContainer.innerHTML = buildVoiceToggleHtml(member.id, member.voice_notes_enabled, member.voice_language);
-            attachVoiceToggleListeners(memberEl, member);
-          }
+        if (plan.voice_included) {
+          member.voice_notes_enabled = true;
+          voiceContainer.innerHTML = buildVoiceIncludedHtml(member.id, member.voice_language);
+          attachVoiceLanguageListener(memberEl, member);
+        } else {
+          voiceContainer.innerHTML = buildVoiceToggleHtml(member.id, member.voice_notes_enabled, member.voice_language);
+          attachVoiceToggleListeners(memberEl, member);
         }
       });
     }
 
     function buildVoiceIncludedHtml(memberId, voiceLanguage) {
-      const defaultLang = voiceLanguage || document.getElementById('ttsLanguageStaff').value;
-      return `
-        <div class="flex items-center gap-4 flex-wrap">
-          <span class="text-sm text-brand-600 font-medium flex items-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
-            Voice notes included
-          </span>
-          <div>
-            <select class="member-voice-language px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white"
-              data-member-id="${memberId}">
-              <option value="ur" ${defaultLang === 'ur' ? 'selected' : ''}>Urdu</option>
-              <option value="en" ${defaultLang === 'en' ? 'selected' : ''}>English</option>
-            </select>
-          </div>
-        </div>
-      `;
+      var defaultLang = voiceLanguage || document.getElementById('ttsLanguageStaff').value;
+      return '<div class="flex items-center gap-4 flex-wrap">' +
+        '<span class="text-sm text-brand-600 font-medium flex items-center gap-1.5">' +
+        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' +
+        'Voice notes included</span>' +
+        '<div><select class="member-voice-language px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white" data-member-id="' + memberId + '">' +
+        buildLanguageOptions(defaultLang) +
+        '</select></div></div>';
     }
 
     function buildVoiceToggleHtml(memberId, isEnabled, voiceLanguage) {
-      const defaultLang = voiceLanguage || document.getElementById('ttsLanguageStaff').value;
-      return `
-        <div class="flex items-center gap-4 flex-wrap">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" class="member-voice-toggle w-4 h-4 text-brand-600 rounded focus:ring-brand-500" data-member-id="${memberId}" ${isEnabled ? 'checked' : ''}>
-            <span class="text-sm text-gray-600">Voice Notes <span class="text-brand-600 font-medium">(+PKR 7,000/mo)</span></span>
-          </label>
-          <div class="member-voice-lang-container ${isEnabled ? '' : 'hidden'}" data-member-id="${memberId}">
-            <select class="member-voice-language px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white"
-              data-member-id="${memberId}">
-              <option value="ur" ${defaultLang === 'ur' ? 'selected' : ''}>Urdu</option>
-              <option value="en" ${defaultLang === 'en' ? 'selected' : ''}>English</option>
-            </select>
-          </div>
-        </div>
-      `;
+      var defaultLang = voiceLanguage || document.getElementById('ttsLanguageStaff').value;
+      var plans = getPlans();
+      var addonPrice = plans.essential.voice_addon_price;
+      return '<div class="flex items-center gap-4 flex-wrap">' +
+        '<label class="flex items-center gap-2 cursor-pointer">' +
+        '<input type="checkbox" class="member-voice-toggle w-4 h-4 text-brand-600 rounded focus:ring-brand-500" data-member-id="' + memberId + '"' + (isEnabled ? ' checked' : '') + '>' +
+        '<span class="text-sm text-gray-600">Voice Notes <span class="text-brand-600 font-medium">(+' + formatPrice(addonPrice) + '/mo)</span></span>' +
+        '</label>' +
+        '<div class="member-voice-lang-container ' + (isEnabled ? '' : 'hidden') + '" data-member-id="' + memberId + '">' +
+        '<select class="member-voice-language px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white" data-member-id="' + memberId + '">' +
+        buildLanguageOptions(defaultLang) +
+        '</select></div></div>';
+    }
+
+    function buildLanguageOptions(selectedLang) {
+      var langs = [
+        { value: 'en', label: 'English' },
+        { value: 'ur', label: 'Urdu' },
+        { value: 'hi', label: 'Hindi' },
+        { value: 'ar', label: 'Arabic' },
+        { value: 'fr', label: 'French' }
+      ];
+      return langs.map(function(l) {
+        return '<option value="' + l.value + '"' + (l.value === selectedLang ? ' selected' : '') + '>' + l.label + '</option>';
+      }).join('');
     }
 
     function attachVoiceLanguageListener(memberEl, member) {
-      const langSelect = memberEl.querySelector('.member-voice-language');
+      var langSelect = memberEl.querySelector('.member-voice-language');
       if (langSelect) {
-        langSelect.addEventListener('change', (e) => {
-          member.voice_language = e.target.value;
-        });
+        langSelect.addEventListener('change', function(e) { member.voice_language = e.target.value; });
       }
     }
 
     function attachVoiceToggleListeners(memberEl, member) {
-      const voiceToggle = memberEl.querySelector('.member-voice-toggle');
-      const langContainer = memberEl.querySelector('.member-voice-lang-container');
-      const langSelect = memberEl.querySelector('.member-voice-language');
+      var voiceToggle = memberEl.querySelector('.member-voice-toggle');
+      var langContainer = memberEl.querySelector('.member-voice-lang-container');
+      var langSelect = memberEl.querySelector('.member-voice-language');
 
       if (voiceToggle) {
-        voiceToggle.addEventListener('change', (e) => {
+        voiceToggle.addEventListener('change', function(e) {
           member.voice_notes_enabled = e.target.checked;
           if (e.target.checked) {
-            const defaultLang = document.getElementById('ttsLanguageStaff').value;
+            var defaultLang = document.getElementById('ttsLanguageStaff').value;
             member.voice_language = member.voice_language || defaultLang;
             if (langSelect) langSelect.value = member.voice_language;
             if (langContainer) langContainer.classList.remove('hidden');
@@ -705,94 +823,93 @@
           updatePricing();
         });
       }
-
       if (langSelect) {
-        langSelect.addEventListener('change', (e) => {
-          member.voice_language = e.target.value;
-        });
+        langSelect.addEventListener('change', function(e) { member.voice_language = e.target.value; });
       }
     }
 
+    // ============================================================
+    // Pricing
+    // ============================================================
     function updatePricing() {
-      const plan = PLANS[selectedPlan];
+      var plans = getPlans();
+      var plan = plans[selectedPlan];
 
-      // Total people = admin (1) + members added
-      const totalPeople = 1 + members.length;
-      const extraPeople = Math.max(0, totalPeople - plan.included_people);
-      const extraTotal = extraPeople * plan.extra_person_price;
+      var totalPeople = 1 + members.length;
+      var extraPeople = Math.max(0, totalPeople - plan.included_people);
+      var extraTotal = extraPeople * plan.extra_person_price;
 
-      // Voice notes pricing
-      let voiceStaffCount = 0;
-      let voiceTotal = 0;
-      const staffMembers = members.filter(m => m.role === 'staff');
+      var voiceStaffCount = 0;
+      var voiceTotal = 0;
+      var staffMembers = members.filter(function(m) { return m.role === 'staff'; });
 
       if (plan.voice_included) {
-        // Pro/Max: voice is included for all staff, cost is 0
         voiceStaffCount = staffMembers.length;
         voiceTotal = 0;
       } else {
-        // Essential: voice is per-staff add-on at +7,000
-        voiceStaffCount = staffMembers.filter(m => m.voice_notes_enabled).length;
+        voiceStaffCount = staffMembers.filter(function(m) { return m.voice_notes_enabled; }).length;
         voiceTotal = voiceStaffCount * plan.voice_addon_price;
       }
 
-      const monthlyTotal = plan.base + extraTotal + voiceTotal;
+      var monthlyTotal = plan.base + extraTotal + voiceTotal;
 
-      // Plan label
-      document.getElementById('pricingPlanLabel').textContent = `Your Plan: ${plan.name}`;
-      document.getElementById('pricingPlanAmount').textContent = `PKR ${plan.base.toLocaleString()}`;
-      document.getElementById('pricingIncludedNote').textContent = `${plan.included_people} people included`;
+      document.getElementById('pricingPlanLabel').textContent = 'Your Plan: ' + plan.name;
+      document.getElementById('pricingPlanAmount').textContent = formatPrice(plan.base);
+      document.getElementById('pricingIncludedNote').textContent = plan.included_people + ' people included';
 
-      // Extra people row
-      const extraRow = document.getElementById('pricingExtraRow');
+      var extraRow = document.getElementById('pricingExtraRow');
       if (extraPeople > 0) {
         extraRow.classList.remove('hidden');
-        document.getElementById('pricingExtraLabel').textContent = `+ ${extraPeople} extra ${extraPeople === 1 ? 'person' : 'people'} (${extraPeople} \u00d7 PKR ${plan.extra_person_price.toLocaleString()})`;
-        document.getElementById('pricingExtraAmount').textContent = `PKR ${extraTotal.toLocaleString()}`;
+        document.getElementById('pricingExtraLabel').textContent =
+          '+ ' + extraPeople + ' extra ' + (extraPeople === 1 ? 'person' : 'people') + ' (' + extraPeople + ' \u00d7 ' + formatPrice(plan.extra_person_price) + ')';
+        document.getElementById('pricingExtraAmount').textContent = formatPrice(extraTotal);
       } else {
         extraRow.classList.add('hidden');
       }
 
-      // Voice notes row
-      const voiceRow = document.getElementById('pricingVoiceRow');
+      var voiceRow = document.getElementById('pricingVoiceRow');
       if (plan.voice_included) {
         voiceRow.classList.remove('hidden');
-        if (staffMembers.length > 0) {
-          document.getElementById('pricingVoiceLabel').innerHTML = `<span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Voice notes for ${staffMembers.length} staff (included)</span>`;
-        } else {
-          document.getElementById('pricingVoiceLabel').innerHTML = `<span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Voice notes for all staff (included)</span>`;
-        }
+        var label = staffMembers.length > 0
+          ? 'Voice notes for ' + staffMembers.length + ' staff (included)'
+          : 'Voice notes for all staff (included)';
+        document.getElementById('pricingVoiceLabel').innerHTML =
+          '<span class="flex items-center gap-1"><svg class="w-3.5 h-3.5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> ' + label + '</span>';
         document.getElementById('pricingVoiceAmount').textContent = 'Included';
         document.getElementById('pricingVoiceAmount').className = 'text-brand-600 font-medium';
       } else {
-        // Essential plan
         if (voiceStaffCount > 0) {
           voiceRow.classList.remove('hidden');
-          document.getElementById('pricingVoiceLabel').textContent = `Voice add-on (${voiceStaffCount} staff \u00d7 PKR ${plan.voice_addon_price.toLocaleString()})`;
-          document.getElementById('pricingVoiceAmount').textContent = `PKR ${voiceTotal.toLocaleString()}`;
+          document.getElementById('pricingVoiceLabel').textContent =
+            'Voice add-on (' + voiceStaffCount + ' staff \u00d7 ' + formatPrice(plan.voice_addon_price) + ')';
+          document.getElementById('pricingVoiceAmount').textContent = formatPrice(voiceTotal);
           document.getElementById('pricingVoiceAmount').className = 'font-medium';
         } else {
           voiceRow.classList.remove('hidden');
-          document.getElementById('pricingVoiceLabel').innerHTML = `<span class="text-gray-400">Voice notes not included</span>`;
+          document.getElementById('pricingVoiceLabel').innerHTML =
+            '<span class="text-gray-400">Voice notes not included</span>';
           document.getElementById('pricingVoiceAmount').textContent = '\u2014';
           document.getElementById('pricingVoiceAmount').className = 'text-gray-400';
         }
       }
 
-      document.getElementById('pricingTotal').textContent = `PKR ${monthlyTotal.toLocaleString()}`;
+      document.getElementById('pricingTotal').textContent = formatPrice(monthlyTotal);
 
-      // Limits footer
-      const voiceLimit = plan.voice_included
-        ? ` \u00b7 ${plan.voice_pool.toLocaleString()} voice notes/mo`
-        : (voiceStaffCount > 0 ? ` \u00b7 ${plan.voice_pool.toLocaleString()} voice notes/mo (add-on)` : '');
+      var voiceLimit = plan.voice_included
+        ? ' \u00b7 ' + plan.voice_pool.toLocaleString() + ' voice notes/mo'
+        : (voiceStaffCount > 0 ? ' \u00b7 ' + plan.voice_pool.toLocaleString() + ' voice notes/mo (add-on)' : '');
       document.getElementById('pricingLimits').textContent =
-        `Limits: ${plan.tasks_per_month.toLocaleString()} tasks/mo \u00b7 ${plan.messages_per_month.toLocaleString()} messages/mo${voiceLimit}`;
+        'Limits: ' + plan.tasks_per_month.toLocaleString() + ' tasks/mo \u00b7 ' + plan.messages_per_month.toLocaleString() + ' messages/mo' + voiceLimit;
     }
 
+    // ============================================================
+    // Members
+    // ============================================================
     function addMember() {
-      const plan = PLANS[selectedPlan];
-      const memberId = Date.now();
-      const isVoiceIncluded = plan.voice_included;
+      var plans = getPlans();
+      var plan = plans[selectedPlan];
+      var memberId = Date.now();
+      var cfg = getConfig();
 
       members.push({
         id: memberId,
@@ -800,127 +917,89 @@
         whatsapp: '',
         nicknames: '',
         role: 'member',
-        title: '',
+        custom_role: '',
         voice_notes_enabled: false,
         voice_language: null
       });
 
-      const memberHtml = `
-        <div class="member-item border border-gray-200 rounded-lg p-4" data-member-id="${memberId}">
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-4">
-              <span class="text-sm font-medium text-gray-700">Person ${members.length}</span>
-              <!-- Role toggle -->
-              <div class="flex gap-3">
-                <label class="flex items-center gap-1.5 cursor-pointer">
-                  <input type="radio" name="role_${memberId}" value="member" checked
-                    class="member-role w-4 h-4 text-brand-600 focus:ring-brand-500" data-member-id="${memberId}">
-                  <span class="text-sm text-gray-600">Family</span>
-                </label>
-                <label class="flex items-center gap-1.5 cursor-pointer">
-                  <input type="radio" name="role_${memberId}" value="staff"
-                    class="member-role w-4 h-4 text-brand-600 focus:ring-brand-500" data-member-id="${memberId}">
-                  <span class="text-sm text-gray-600">Staff</span>
-                </label>
-              </div>
-            </div>
-            <button type="button" class="remove-member text-gray-400 hover:text-red-500 transition" data-member-id="${memberId}">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
-          <div class="grid gap-3 sm:grid-cols-2 sm:grid-cols-4">
-            <div>
-              <input type="text" class="member-name w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
-                placeholder="Name" data-member-id="${memberId}">
-            </div>
-            <div>
-              <input type="tel" class="member-whatsapp w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
-                placeholder="WhatsApp (+92...)" data-member-id="${memberId}">
-            </div>
-            <div>
-              <input type="text" class="member-nicknames w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
-                placeholder="Nicknames (optional, e.g. Babu, Bashu)" data-member-id="${memberId}">
-            </div>
-            <div class="member-title-container hidden" data-member-id="${memberId}">
-              <select class="member-title w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition bg-white"
-                data-member-id="${memberId}">
-                <option value="">Job Title</option>
-                <option value="driver">Driver</option>
-                <option value="maid">Maid</option>
-                <option value="cook">Cook</option>
-                <option value="guard">Guard</option>
-                <option value="gardener">Gardener</option>
-                <option value="nanny">Nanny</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-          </div>
-          <!-- Voice Notes (staff only) -->
-          <div class="member-voice-container hidden mt-3" data-member-id="${memberId}">
-          </div>
-        </div>
-      `;
+      var familyLabel = cfg.familyLabel;
+      var staffLabel = cfg.staffLabel;
 
-      membersContainer.insertAdjacentHTML('beforeend', memberHtml);
+      var memberHtml = '<div class="member-item border border-gray-200 rounded-lg p-4" data-member-id="' + memberId + '">' +
+        '<div class="flex items-center justify-between mb-3">' +
+        '<div class="flex items-center gap-4">' +
+        '<span class="text-sm font-medium text-gray-700 member-label">Person ' + members.length + '</span>' +
+        '<div class="flex gap-3">' +
+        '<label class="flex items-center gap-1.5 cursor-pointer">' +
+        '<input type="radio" name="role_' + memberId + '" value="member" checked class="member-role w-4 h-4 text-brand-600 focus:ring-brand-500" data-member-id="' + memberId + '">' +
+        '<span class="text-sm text-gray-600">' + familyLabel + '</span></label>' +
+        '<label class="flex items-center gap-1.5 cursor-pointer">' +
+        '<input type="radio" name="role_' + memberId + '" value="staff" class="member-role w-4 h-4 text-brand-600 focus:ring-brand-500" data-member-id="' + memberId + '">' +
+        '<span class="text-sm text-gray-600">' + staffLabel + '</span></label>' +
+        '</div></div>' +
+        '<button type="button" class="remove-member text-gray-400 hover:text-red-500 transition" data-member-id="' + memberId + '">' +
+        '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>' +
+        '</button></div>' +
+        '<div class="grid gap-3 sm:grid-cols-2 sm:grid-cols-4">' +
+        '<div><input type="text" class="member-name w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="Name" data-member-id="' + memberId + '"></div>' +
+        '<div><input type="tel" class="member-whatsapp w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="WhatsApp (+92...)" data-member-id="' + memberId + '"></div>' +
+        '<div><input type="text" class="member-nicknames w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="Nicknames (optional)" data-member-id="' + memberId + '"></div>' +
+        '<div class="member-title-container hidden" data-member-id="' + memberId + '">' +
+        '<input type="text" class="member-title w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="Job Title (e.g., Driver, Manager)" data-member-id="' + memberId + '"></div>' +
+        '</div>' +
+        '<div class="member-voice-container hidden mt-3" data-member-id="' + memberId + '"></div>' +
+        '</div>';
+
+      document.getElementById('membersContainer').insertAdjacentHTML('beforeend', memberHtml);
       updateMemberCount();
       updatePricing();
 
-      // Add event listeners to new member inputs
-      const memberEl = membersContainer.querySelector(`.member-item[data-member-id="${memberId}"]`);
-      const member = members.find(m => m.id === memberId);
+      var memberEl = document.querySelector('.member-item[data-member-id="' + memberId + '"]');
 
-      memberEl.querySelector('.member-name').addEventListener('input', (e) => {
-        const m = members.find(m => m.id === memberId);
+      memberEl.querySelector('.member-name').addEventListener('input', function(e) {
+        var m = members.find(function(m) { return m.id === memberId; });
         if (m) m.name = e.target.value;
       });
-
-      memberEl.querySelector('.member-whatsapp').addEventListener('input', (e) => {
-        const m = members.find(m => m.id === memberId);
+      memberEl.querySelector('.member-whatsapp').addEventListener('input', function(e) {
+        var m = members.find(function(m) { return m.id === memberId; });
         if (m) m.whatsapp = e.target.value;
       });
-
-      memberEl.querySelector('.member-nicknames').addEventListener('input', (e) => {
-        const m = members.find(m => m.id === memberId);
+      memberEl.querySelector('.member-nicknames').addEventListener('input', function(e) {
+        var m = members.find(function(m) { return m.id === memberId; });
         if (m) m.nicknames = e.target.value;
       });
-
-      // Title dropdown event listener
-      memberEl.querySelector('.member-title').addEventListener('change', (e) => {
-        const m = members.find(m => m.id === memberId);
-        if (m) m.title = e.target.value;
+      memberEl.querySelector('.member-title').addEventListener('input', function(e) {
+        var m = members.find(function(m) { return m.id === memberId; });
+        if (m) m.custom_role = e.target.value;
       });
 
-      // Role toggle event listeners (show/hide title dropdown + voice notes)
-      const roleInputs = memberEl.querySelectorAll('.member-role');
-      roleInputs.forEach(input => {
-        input.addEventListener('change', (e) => {
-          const m = members.find(m => m.id === memberId);
+      var roleInputs = memberEl.querySelectorAll('.member-role');
+      roleInputs.forEach(function(input) {
+        input.addEventListener('change', function(e) {
+          var m = members.find(function(m) { return m.id === memberId; });
           if (m) {
             m.role = e.target.value;
-            m.title = '';
+            m.custom_role = '';
             m.voice_notes_enabled = false;
             m.voice_language = null;
           }
 
-          const titleContainer = memberEl.querySelector('.member-title-container');
-          const titleSelect = memberEl.querySelector('.member-title');
-          const voiceContainer = memberEl.querySelector('.member-voice-container');
+          var titleContainer = memberEl.querySelector('.member-title-container');
+          var titleInput = memberEl.querySelector('.member-title');
+          var voiceContainer = memberEl.querySelector('.member-voice-container');
 
           if (e.target.value === 'staff') {
             titleContainer.classList.remove('hidden');
             voiceContainer.classList.remove('hidden');
 
-            const currentPlan = PLANS[selectedPlan];
+            var currentPlans = getPlans();
+            var currentPlan = currentPlans[selectedPlan];
             if (currentPlan.voice_included) {
-              // Pro/Max: voice is included
               m.voice_notes_enabled = true;
               m.voice_language = document.getElementById('ttsLanguageStaff').value;
               voiceContainer.innerHTML = buildVoiceIncludedHtml(memberId, m.voice_language);
               attachVoiceLanguageListener(memberEl, m);
             } else {
-              // Essential: show toggle
               voiceContainer.innerHTML = buildVoiceToggleHtml(memberId, false, null);
               attachVoiceToggleListeners(memberEl, m);
             }
@@ -929,47 +1008,49 @@
             voiceContainer.classList.add('hidden');
             voiceContainer.innerHTML = '';
           }
-          titleSelect.selectedIndex = 0;
+          if (titleInput) titleInput.value = '';
           updateMemberCount();
           updatePricing();
         });
       });
 
-      memberEl.querySelector('.remove-member').addEventListener('click', () => removeMember(memberId));
+      memberEl.querySelector('.remove-member').addEventListener('click', function() { removeMember(memberId); });
     }
 
     function removeMember(memberId) {
-      members = members.filter(m => m.id !== memberId);
-      const memberEl = membersContainer.querySelector(`[data-member-id="${memberId}"]`);
-      if (memberEl) memberEl.remove();
+      members = members.filter(function(m) { return m.id !== memberId; });
+      var el = document.querySelector('.member-item[data-member-id="' + memberId + '"]');
+      if (el) el.remove();
       updateMemberCount();
       updatePricing();
 
-      // Update person numbers
-      const memberItems = membersContainer.querySelectorAll('.member-item');
-      memberItems.forEach((item, index) => {
-        item.querySelector('.text-sm.font-medium').textContent = `Person ${index + 1}`;
+      document.querySelectorAll('.member-item').forEach(function(item, index) {
+        item.querySelector('.member-label').textContent = 'Person ' + (index + 1);
       });
     }
 
     function updateMemberCount() {
-      const count = members.length;
-      const staffCount = members.filter(m => m.role === 'staff').length;
-      const memberCountNum = count - staffCount;
+      var count = members.length;
+      var staffCount = members.filter(function(m) { return m.role === 'staff'; }).length;
+      var memberCountNum = count - staffCount;
+      var cfg = getConfig();
 
-      let text = '';
-      if (memberCountNum > 0) text += `${memberCountNum} family`;
+      var text = '';
+      if (memberCountNum > 0) text += memberCountNum + ' ' + cfg.familyLabel.toLowerCase();
       if (staffCount > 0) {
         if (text) text += ', ';
-        text += `${staffCount} staff`;
+        text += staffCount + ' ' + cfg.staffLabel.toLowerCase();
       }
       if (!text) text = '0 people';
 
-      memberCount.textContent = text;
+      document.getElementById('memberCount').textContent = text;
     }
 
+    // ============================================================
+    // Validation & Submission
+    // ============================================================
     function normalizePhone(phone) {
-      let normalized = phone.replace(/[\s\-\(\)]/g, '');
+      var normalized = phone.replace(/[\s\-\(\)]/g, '');
       if (!normalized.startsWith('+')) {
         if (normalized.startsWith('0')) {
           normalized = '+92' + normalized.substring(1);
@@ -981,94 +1062,93 @@
     }
 
     function validatePhone(phone) {
-      const normalized = normalizePhone(phone);
-      return /^\+[1-9]\d{9,14}$/.test(normalized);
+      return /^\+[1-9]\d{9,14}$/.test(normalizePhone(phone));
     }
 
     function showError(message) {
-      formError.textContent = message;
-      formError.classList.remove('hidden');
-      formError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      var el = document.getElementById('formError');
+      el.textContent = message;
+      el.classList.remove('hidden');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function hideError() {
-      formError.classList.add('hidden');
+      document.getElementById('formError').classList.add('hidden');
     }
 
     function setLoading(loading) {
-      submitBtn.disabled = loading;
-      submitText.textContent = loading ? 'Processing...' : 'Create Household';
-      submitSpinner.classList.toggle('hidden', !loading);
+      var cfg = getConfig();
+      document.getElementById('submitBtn').disabled = loading;
+      document.getElementById('submitText').textContent = loading ? 'Processing...' : 'Create ' + cfg.entityName;
+      document.getElementById('submitSpinner').classList.toggle('hidden', !loading);
     }
 
     function showSuccess(title, message) {
-      form.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-      formSection.classList.add('hidden');
-      successSection.classList.remove('hidden');
-      successTitle.textContent = title;
-      successMessage.innerHTML = message;
-      successSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.querySelectorAll('#signupForm > section').forEach(function(s) { s.classList.add('hidden'); });
+      document.getElementById('formSection').classList.add('hidden');
+      document.getElementById('successSection').classList.remove('hidden');
+      document.getElementById('successTitle').textContent = title;
+      document.getElementById('successMessage').innerHTML = message;
+      document.getElementById('successSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     async function handleSubmit(e) {
       e.preventDefault();
       hideError();
 
-      const plan = PLANS[selectedPlan];
+      var plans = getPlans();
+      var plan = plans[selectedPlan];
+      var cfg = getConfig();
 
-      // Validate subscriber phone
-      const subscriberWhatsapp = document.getElementById('subscriberWhatsapp').value;
+      var subscriberWhatsapp = document.getElementById('subscriberWhatsapp').value;
       if (!validatePhone(subscriberWhatsapp)) {
         showError('Please enter a valid WhatsApp number with country code (e.g., +92 300 1234567)');
         return;
       }
 
-      // Validate member phones
-      const validMembers = members.filter(m => m.name.trim() && m.whatsapp.trim());
-      for (const member of validMembers) {
-        if (!validatePhone(member.whatsapp)) {
-          showError(`Please enter a valid WhatsApp number for ${member.name || 'person'}`);
+      var validMembers = members.filter(function(m) { return m.name.trim() && m.whatsapp.trim(); });
+      for (var i = 0; i < validMembers.length; i++) {
+        if (!validatePhone(validMembers[i].whatsapp)) {
+          showError('Please enter a valid WhatsApp number for ' + (validMembers[i].name || 'person'));
           return;
         }
       }
 
-      // Calculate pricing
-      const totalPeople = 1 + validMembers.length;
-      const extraPeopleCount = Math.max(0, totalPeople - plan.included_people);
-      const extraPeopleTotal = extraPeopleCount * plan.extra_person_price;
+      var totalPeople = 1 + validMembers.length;
+      var extraPeopleCount = Math.max(0, totalPeople - plan.included_people);
+      var extraPeopleTotal = extraPeopleCount * plan.extra_person_price;
 
-      let voiceNotesCount = 0;
-      let voiceNotesTotal = 0;
-      const staffMembers = validMembers.filter(m => m.role === 'staff');
+      var voiceNotesCount = 0;
+      var voiceNotesTotal = 0;
+      var staffMembers = validMembers.filter(function(m) { return m.role === 'staff'; });
 
       if (plan.voice_included) {
-        // Pro/Max: all staff get voice, included in base
         voiceNotesCount = staffMembers.length;
         voiceNotesTotal = 0;
       } else {
-        // Essential: per-staff add-on
-        voiceNotesCount = staffMembers.filter(m => m.voice_notes_enabled).length;
+        voiceNotesCount = staffMembers.filter(function(m) { return m.voice_notes_enabled; }).length;
         voiceNotesTotal = voiceNotesCount * plan.voice_addon_price;
       }
 
-      const monthlyTotal = plan.base + extraPeopleTotal + voiceNotesTotal;
+      var monthlyTotal = plan.base + extraPeopleTotal + voiceNotesTotal;
 
-      // Build form data
-      const formData = {
+      var formData = {
+        service_type: serviceType,
+        currency: selectedCurrency,
         subscriber: {
           name: document.getElementById('subscriberName').value.trim(),
           whatsapp: normalizePhone(subscriberWhatsapp),
           email: document.getElementById('subscriberEmail').value.trim()
         },
-        household: {
-          name: document.getElementById('householdName').value.trim(),
+        account: {
+          name: document.getElementById('accountName').value.trim(),
           timezone: document.getElementById('timezone').value,
           city: document.getElementById('city').value.trim(),
-          country: document.getElementById('country').value,
-          address: document.getElementById('address').value.trim()
+          country: document.getElementById('country').value
         },
         plan: selectedPlan,
         pricing: {
+          currency: selectedCurrency,
           plan_base: plan.base,
           extra_people_count: extraPeopleCount,
           extra_people_total: extraPeopleTotal,
@@ -1077,10 +1157,10 @@
           monthly_total: monthlyTotal
         },
         tts_language_staff: document.getElementById('ttsLanguageStaff').value,
-        members: validMembers.map(m => {
-          const isStaff = m.role === 'staff';
-          let voiceEnabled = false;
-          let voiceLang = null;
+        members: validMembers.map(function(m) {
+          var isStaff = m.role === 'staff';
+          var voiceEnabled = false;
+          var voiceLang = null;
 
           if (isStaff) {
             if (plan.voice_included) {
@@ -1097,7 +1177,7 @@
             whatsapp: normalizePhone(m.whatsapp),
             nicknames: m.nicknames.trim() || null,
             role: m.role,
-            title: isStaff ? (m.title || null) : null,
+            custom_role: isStaff ? (m.custom_role.trim() || null) : null,
             voice_notes_enabled: voiceEnabled,
             voice_language: voiceLang
           };
@@ -1107,42 +1187,45 @@
       setLoading(true);
 
       try {
-        const response = await fetch(API_ENDPOINT, {
+        var response = await fetch(API_ENDPOINT, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
         });
 
-        const data = await response.json();
+        var data = await response.json();
+        if (!response.ok) throw new Error(data.error || data.message || 'Something went wrong');
 
-        if (!response.ok) {
-          throw new Error(data.error || data.message || 'Something went wrong');
-        }
+        var entityName = cfg.entityNameLower;
+        var brandName = cfg.brand;
+        var accountName = formData.account.name;
 
         if (data.status === 'activated') {
           showSuccess(
-            'Welcome to HomeOps!',
-            `<p class="mb-4">Your household <strong>"${formData.household.name}"</strong> is now active.</p>
-            <p class="mb-4">You can start using HomeOps via WhatsApp immediately!</p>
-            <p class="text-sm text-gray-500">Send a message to our WhatsApp number to get started.</p>`
+            'Welcome to ' + brandName + '!',
+            '<p class="mb-4">Your ' + entityName + ' <strong>"' + accountName + '"</strong> is now active.</p>' +
+            '<p class="mb-4">You can start using ' + cfg.shortBrand + ' via WhatsApp immediately!</p>' +
+            '<p class="text-sm text-gray-500">Send a message to our WhatsApp number to get started.</p>'
           );
         } else if (data.status === 'awaiting_payment') {
+          var paymentHtml = selectedCurrency === 'USD'
+            ? '<p class="text-sm text-gray-600">We will contact you at <strong>' + formData.subscriber.email + '</strong> to set up payment.</p>'
+            : '<ul class="text-sm text-gray-600 space-y-1">' +
+              '<li><strong>JazzCash:</strong> ' + (data.payment_jazzcash || '03XX-XXXXXXX') + '</li>' +
+              '<li><strong>EasyPaisa:</strong> ' + (data.payment_easypaisa || '03XX-XXXXXXX') + '</li>' +
+              '<li><strong>Bank Transfer:</strong> ' + (data.payment_bank || 'Contact for details') + '</li>' +
+              '</ul>';
+
           showSuccess(
             'Thank You for Signing Up!',
-            `<p class="mb-4">Your signup for <strong>"${formData.household.name}"</strong> is pending activation.</p>
-            <div class="bg-gray-50 rounded-lg p-4 mb-4 text-left">
-              <p class="font-medium text-gray-900 mb-1">Plan: <strong>${plan.name}</strong></p>
-              <p class="font-medium text-gray-900 mb-2">Monthly amount: <strong>PKR ${monthlyTotal.toLocaleString()}</strong></p>
-              <p class="font-medium text-gray-900 mb-2">Please complete payment via:</p>
-              <ul class="text-sm text-gray-600 space-y-1">
-                <li><strong>JazzCash:</strong> ${data.payment_jazzcash || '03XX-XXXXXXX'}</li>
-                <li><strong>EasyPaisa:</strong> ${data.payment_easypaisa || '03XX-XXXXXXX'}</li>
-                <li><strong>Bank Transfer:</strong> ${data.payment_bank || 'Contact for details'}</li>
-              </ul>
-            </div>
-            <p class="text-sm text-gray-500">Once payment is confirmed, your household will be activated within 24 hours. You'll receive a WhatsApp message when ready.</p>`
+            '<p class="mb-4">Your signup for <strong>"' + accountName + '"</strong> is pending activation.</p>' +
+            '<div class="bg-gray-50 rounded-lg p-4 mb-4 text-left">' +
+            '<p class="font-medium text-gray-900 mb-1">Plan: <strong>' + plan.name + '</strong></p>' +
+            '<p class="font-medium text-gray-900 mb-2">Monthly amount: <strong>' + formatPrice(monthlyTotal) + '</strong></p>' +
+            '<p class="font-medium text-gray-900 mb-2">' + (selectedCurrency === 'USD' ? 'Payment setup:' : 'Please complete payment via:') + '</p>' +
+            paymentHtml +
+            '</div>' +
+            '<p class="text-sm text-gray-500">Once payment is confirmed, your ' + entityName + ' will be activated within 24 hours. You\'ll receive a WhatsApp message when ready.</p>'
           );
         } else {
           throw new Error('Unexpected response from server');
@@ -1154,7 +1237,30 @@
       }
     }
 
-    // Initialize on DOM ready
+    // ============================================================
+    // Initialization
+    // ============================================================
+    function init() {
+      var urlParams = new URLSearchParams(window.location.search);
+
+      var phone = urlParams.get('phone');
+      if (phone) {
+        document.getElementById('subscriberWhatsapp').value = decodeURIComponent(phone);
+      }
+
+      var svc = urlParams.get('service');
+      if (svc === 'homeops' || svc === 'bizops') {
+        serviceType = svc;
+        applyService();
+      } else {
+        document.getElementById('serviceSelector').classList.remove('hidden');
+        document.getElementById('serviceSelector').classList.add('flex');
+      }
+
+      document.getElementById('addMemberBtn').addEventListener('click', addMember);
+      document.getElementById('signupForm').addEventListener('submit', handleSubmit);
+    }
+
     document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>

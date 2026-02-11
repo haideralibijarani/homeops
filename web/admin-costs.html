@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cost Dashboard - HomeOps</title>
+  <title>MYNK Admin Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -50,7 +50,7 @@
     .margin-bad { background: #fee2e2; color: #991b1b; }
     .margin-zero { background: #f4f4f5; color: #71717a; }
     tr.household-row { cursor: pointer; transition: background 0.1s; }
-    tr.household-row:hover { background: #f0fdf4; }
+    tr.household-row:hover { background: #fafafa; }
     .daily-period-btn { background: #f4f4f5; color: #71717a; }
     .daily-period-btn:hover { background: #e4e4e7; }
     .daily-period-btn.active { background: #166534; color: white; }
@@ -69,13 +69,13 @@
   <div id="loginGate" class="min-h-screen flex items-center justify-center px-4">
     <div class="w-full max-w-sm fade-in">
       <div class="text-center mb-8">
-        <div class="w-14 h-14 bg-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand-200">
+        <div class="w-14 h-14 bg-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-gray-300">
           <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
           </svg>
         </div>
-        <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">HomeOps</h1>
-        <p class="text-sm text-gray-500 mt-1 font-medium">Cost & Profitability Dashboard</p>
+        <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">MYNK</h1>
+        <p class="text-sm text-gray-500 mt-1 font-medium">Admin Dashboard</p>
       </div>
 
       <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
@@ -108,7 +108,7 @@
             </svg>
           </div>
           <div>
-            <h1 class="text-base font-bold text-gray-900">HomeOps Costs</h1>
+            <h1 class="text-base font-bold text-gray-900">MYNK Admin Dashboard</h1>
             <p class="text-xs text-gray-500" id="headerTimestamp"></p>
           </div>
         </div>
@@ -140,9 +140,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
               </svg>
             </div>
-            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Households</span>
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Accounts</span>
           </div>
           <p class="text-2xl font-bold text-gray-900 font-mono" id="totalHouseholds">--</p>
+          <p class="text-xs text-gray-400 mt-1" id="serviceBreakdown"></p>
         </div>
         <!-- Card 2: Revenue -->
         <div class="bg-white rounded-xl border border-gray-200 p-5 slide-up stagger-2">
@@ -201,10 +202,17 @@
         </div>
       </div>
 
-      <!-- Household Table -->
+      <!-- Account Table -->
       <div class="bg-white rounded-xl border border-gray-200 overflow-hidden slide-up stagger-4 mb-6">
         <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 class="text-sm font-bold text-gray-900">Household Profitability</h2>
+          <div class="flex items-center gap-3">
+            <h2 class="text-sm font-bold text-gray-900">Account Profitability</h2>
+            <select id="serviceFilter" onchange="renderData()" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-600 font-medium">
+              <option value="">All Services</option>
+              <option value="homeops">HomeOps</option>
+              <option value="bizops">BizOps</option>
+            </select>
+          </div>
           <span class="text-xs text-gray-400 font-mono" id="tableCount"></span>
         </div>
         <div class="overflow-x-auto">
@@ -212,8 +220,9 @@
             <thead>
               <tr class="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wider">
                 <th class="sort-header px-5 py-3 text-left font-semibold" data-sort="name" onclick="sortTable('name')">
-                  Household <span class="sort-icon">&#9650;</span>
+                  Account <span class="sort-icon">&#9650;</span>
                 </th>
+                <th class="px-3 py-3 text-left font-semibold">Service</th>
                 <th class="sort-header px-4 py-3 text-left font-semibold" data-sort="location" onclick="sortTable('location')">
                   Location <span class="sort-icon">&#9650;</span>
                 </th>
@@ -238,7 +247,7 @@
               </tr>
             </thead>
             <tbody id="householdTableBody">
-              <tr><td colspan="8" class="px-5 py-12 text-center text-gray-400">Loading...</td></tr>
+              <tr><td colspan="9" class="px-5 py-12 text-center text-gray-400">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -255,7 +264,7 @@
         <div id="dailyUsagePanel" class="hidden">
           <div class="px-5 py-3 border-b border-gray-100 flex flex-wrap items-center gap-3">
             <select id="dailyHousehold" onchange="loadDailyUsage()" class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 font-medium">
-              <option value="">All Households</option>
+              <option value="">All Accounts</option>
             </select>
             <select id="dailyLocation" onchange="applyDailyLocationFilter()" class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 font-medium">
               <option value="">All Locations</option>
@@ -272,7 +281,7 @@
               <thead class="sticky top-0 bg-white">
                 <tr class="border-b border-gray-100 text-[10px] text-gray-500 uppercase tracking-wider">
                   <th class="px-4 py-2.5 text-left font-semibold">Date</th>
-                  <th class="px-3 py-2.5 text-left font-semibold">Household</th>
+                  <th class="px-3 py-2.5 text-left font-semibold">Account</th>
                   <th class="px-3 py-2.5 text-right font-semibold">Msgs In</th>
                   <th class="px-3 py-2.5 text-right font-semibold">Msgs Out</th>
                   <th class="px-3 py-2.5 text-right font-semibold">Tasks</th>
@@ -320,7 +329,7 @@
 
     <footer class="border-t border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 text-center text-xs text-gray-400">
-        HomeOps Admin Dashboard &middot; Data from <code class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">admin_cost_dashboard()</code> via Supabase RPC
+        MYNK Admin Dashboard &middot; Data from <code class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">admin_cost_dashboard()</code> via Supabase RPC
       </div>
     </footer>
   </div>
@@ -483,14 +492,14 @@
       const d = dashboardData;
       const t = d.totals;
       const rate = d.exchange_rate;
-      const households = d.households || [];
+      const households = d.accounts || d.households || [];
 
       // Timestamp
       document.getElementById('headerTimestamp').textContent =
         'Updated ' + new Date(d.generated_at).toLocaleString();
 
       // Summary cards
-      document.getElementById('totalHouseholds').textContent = t.total_households;
+      document.getElementById('totalHouseholds').textContent = t.total_accounts || t.total_households;
 
       document.getElementById('totalRevenue').textContent =
         fmtMoney(t.total_revenue_monthly_usd, t.total_revenue_monthly_pkr, {decimals: currentCurrency === 'usd' ? 2 : 0});
@@ -534,18 +543,35 @@
       }
       document.getElementById('rateExchange').textContent = rate + ' PKR/USD';
 
+      // Service breakdown
+      const homeopsCount = households.filter(h => (h.service_type || 'homeops') === 'homeops').length;
+      const bizopsCount = households.filter(h => (h.service_type || 'homeops') === 'bizops').length;
+      document.getElementById('serviceBreakdown').textContent = bizopsCount > 0
+        ? `HomeOps: ${homeopsCount} | BizOps: ${bizopsCount}`
+        : '';
+
       // Table
-      document.getElementById('tableCount').textContent = households.length + ' households';
+      const svcFilter = document.getElementById('serviceFilter')?.value || '';
+      const filteredCount = svcFilter
+        ? households.filter(h => (h.service_type || 'homeops') === svcFilter).length
+        : households.length;
+      document.getElementById('tableCount').textContent = filteredCount + ' accounts';
       renderTable(households);
     }
 
     function renderTable(households) {
-      const sorted = sortHouseholds(households);
+      // Apply service filter
+      const svcFilter = document.getElementById('serviceFilter')?.value || '';
+      const filtered = svcFilter
+        ? households.filter(h => (h.service_type || 'homeops') === svcFilter)
+        : households;
+
+      const sorted = sortHouseholds(filtered);
       const rate = dashboardData.exchange_rate;
       const tbody = document.getElementById('householdTableBody');
 
       if (sorted.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="px-5 py-12 text-center text-gray-400">No household data yet. Run migration 019 and trigger WF8.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="px-5 py-12 text-center text-gray-400">No account data found.</td></tr>';
         return;
       }
 
@@ -577,11 +603,18 @@
         const breakdown = h.cost_breakdown || {};
         const costsAll = h.costs || {};
 
+        const svcType = h.service_type || 'homeops';
+        const svcBadge = svcType === 'bizops'
+          ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">BizOps</span>'
+          : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-700">HomeOps</span>';
+        const acctCurrency = h.currency || 'PKR';
+
         return `
           <tr class="household-row border-b border-gray-50" onclick="toggleExpand(${i})">
             <td class="px-5 py-3.5 font-medium text-gray-900">
               ${statusDot}${h.name || 'Unknown'}
             </td>
+            <td class="px-3 py-3.5">${svcBadge}</td>
             <td class="px-4 py-3.5 text-gray-500 text-xs">${h.city || ''}${h.city && h.country ? ', ' : ''}${h.country || ''}</td>
             <td class="px-4 py-3.5 text-gray-600">${planLabel}</td>
             <td class="px-4 py-3.5 text-center text-gray-600 font-mono text-xs">
@@ -596,7 +629,7 @@
             </td>
           </tr>
           <tr class="expand-row" id="expand-${i}">
-            <td colspan="8" class="px-5 py-4 bg-gray-50 border-b border-gray-100">
+            <td colspan="9" class="px-5 py-4 bg-gray-50 border-b border-gray-100">
               <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-xs">
                 <div>
                   <p class="font-semibold text-gray-500 uppercase tracking-wider mb-2">Cost Breakdown (All-Time)</p>
@@ -681,7 +714,7 @@
         activeHeader.querySelector('.sort-icon').innerHTML = currentSort.dir === 'asc' ? '&#9650;' : '&#9660;';
       }
 
-      renderTable(dashboardData.households || []);
+      renderTable(dashboardData.accounts || dashboardData.households || []);
     }
 
     function sortHouseholds(households) {
@@ -749,7 +782,7 @@
 
       const householdId = document.getElementById('dailyHousehold').value || null;
       const params = { admin_secret: secret, p_period: dailyPeriod };
-      if (householdId) params.p_household_id = householdId;
+      if (householdId) params.p_account_id = householdId;
 
       try {
         const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_daily_usage`, {
@@ -786,8 +819,8 @@
 
       // Populate household dropdown if not yet done
       const select = document.getElementById('dailyHousehold');
-      if (select.options.length <= 1 && dashboardData?.households) {
-        for (const h of dashboardData.households) {
+      if (select.options.length <= 1 && (dashboardData?.accounts || dashboardData?.households)) {
+        for (const h of (dashboardData.accounts || dashboardData.households)) {
           const opt = document.createElement('option');
           opt.value = h.id;
           opt.textContent = h.name;
@@ -844,7 +877,7 @@
         const dateStr = new Date(r.date + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
         return `<tr class="${isToday ? 'today-row' : 'hover:bg-gray-50'}">
           <td class="px-4 py-2 font-mono text-gray-700">${dateStr}${isToday ? ' <span class="text-[9px] font-bold text-brand-600 uppercase">live</span>' : ''}</td>
-          <td class="px-3 py-2 text-gray-600 truncate max-w-[120px]">${r.household_name || ''}</td>
+          <td class="px-3 py-2 text-gray-600 truncate max-w-[120px]">${r.account_name || r.household_name || ''}</td>
           <td class="px-3 py-2 text-right font-mono text-gray-700">${r.messages_in || 0}</td>
           <td class="px-3 py-2 text-right font-mono text-gray-700">${r.messages_out || 0}</td>
           <td class="px-3 py-2 text-right font-mono text-gray-700">${r.tasks || 0}</td>

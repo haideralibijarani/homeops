@@ -4,6 +4,8 @@
   ],
   "rewrites": [
     { "source": "/signup", "destination": "/web/signup.html" },
+    { "source": "/signup/homeops", "destination": "/web/signup.html?service=homeops" },
+    { "source": "/signup/bizops", "destination": "/web/signup.html?service=bizops" },
     { "source": "/admin", "destination": "/web/admin-costs.html" }
   ]
 }
