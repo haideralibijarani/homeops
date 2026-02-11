@@ -428,11 +428,13 @@ GRANT SELECT ON subscription_dashboard TO authenticated;
 -- For any external queries that still reference households
 -- ============================================
 
-CREATE OR REPLACE VIEW households AS SELECT * FROM accounts;
+CREATE OR REPLACE VIEW households AS
+  SELECT * FROM accounts WHERE service_type = 'homeops';
 GRANT SELECT ON households TO authenticated;
 
--- Organizations view (BizOps backward-compat / convenience alias)
-CREATE OR REPLACE VIEW organizations AS SELECT * FROM accounts;
+-- Organizations view (BizOps only)
+CREATE OR REPLACE VIEW organizations AS
+  SELECT * FROM accounts WHERE service_type = 'bizops';
 GRANT SELECT ON organizations TO authenticated;
 
 -- ============================================
