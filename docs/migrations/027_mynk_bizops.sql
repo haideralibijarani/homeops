@@ -649,6 +649,9 @@ GRANT EXECUTE ON FUNCTION admin_cost_dashboard(TEXT) TO authenticated;
 -- Renames household refs to account, adds service_type
 -- ============================================
 
+-- Must drop first because parameter name changes (p_household_id → p_account_id)
+DROP FUNCTION IF EXISTS admin_daily_usage(TEXT, UUID, TEXT);
+
 CREATE OR REPLACE FUNCTION admin_daily_usage(
   admin_secret TEXT,
   p_account_id UUID DEFAULT NULL,
