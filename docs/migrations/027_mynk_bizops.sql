@@ -431,6 +431,10 @@ GRANT SELECT ON subscription_dashboard TO authenticated;
 CREATE OR REPLACE VIEW households AS SELECT * FROM accounts;
 GRANT SELECT ON households TO authenticated;
 
+-- Organizations view (BizOps backward-compat / convenience alias)
+CREATE OR REPLACE VIEW organizations AS SELECT * FROM accounts;
+GRANT SELECT ON organizations TO authenticated;
+
 -- ============================================
 -- STEP 15: UPDATE admin_cost_dashboard()
 -- Adds service_type, currency, currency-aware revenue
@@ -849,7 +853,7 @@ ALTER TABLE staff ADD CONSTRAINT staff_language_pref_check
 -- DONE!
 -- ============================================
 -- After running this migration:
--- 1. Table 'households' renamed to 'accounts', backward-compat view created
+-- 1. Table 'households' renamed to 'accounts', backward-compat views created (households + organizations)
 -- 2. All 'household_id' columns renamed to 'account_id' (9 tables)
 -- 3. service_type (homeops/bizops) and currency (PKR/USD) added
 -- 4. TTS language expanded: 59 languages (default: en)
